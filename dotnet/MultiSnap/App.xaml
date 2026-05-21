@@ -2,6 +2,98 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
-        <SolidColorBrush x:Key="AccentBrush" Color="#ef1f2d" />
+        <Color x:Key="AppBackgroundColor">#0F1218</Color>
+        <Color x:Key="PanelBackgroundColor">#171B24</Color>
+        <Color x:Key="SurfaceBackgroundColor">#0A0D12</Color>
+        <Color x:Key="StrokeColor">#2A3140</Color>
+        <Color x:Key="TextPrimaryColor">#F5F7FB</Color>
+        <Color x:Key="TextSecondaryColor">#9AA6B8</Color>
+        <Color x:Key="AccentColor">#EF233C</Color>
+        <Color x:Key="AccentWarmColor">#FFB703</Color>
+        <Color x:Key="AccentCoolColor">#2DD4BF</Color>
+
+        <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackgroundColor}" />
+        <SolidColorBrush x:Key="PanelBackgroundBrush" Color="{StaticResource PanelBackgroundColor}" />
+        <SolidColorBrush x:Key="SurfaceBackgroundBrush" Color="{StaticResource SurfaceBackgroundColor}" />
+        <SolidColorBrush x:Key="StrokeBrush" Color="{StaticResource StrokeColor}" />
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+        <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+        <SolidColorBrush x:Key="AccentWarmBrush" Color="{StaticResource AccentWarmColor}" />
+        <SolidColorBrush x:Key="AccentCoolBrush" Color="{StaticResource AccentCoolColor}" />
+
+        <LinearGradientBrush x:Key="LogoGradientBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FFB703" Offset="0" />
+            <GradientStop Color="#EF233C" Offset="0.55" />
+            <GradientStop Color="#2DD4BF" Offset="1" />
+        </LinearGradientBrush>
+
+        <DrawingImage x:Key="AppIconImage">
+            <DrawingImage.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#10141C">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,64,64" RadiusX="14" RadiusY="14" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="{StaticResource LogoGradientBrush}">
+                        <GeometryDrawing.Geometry>
+                            <PathGeometry Figures="M15,12 L38,12 Q49,12 49,23 L49,26 L39,26 L39,23 Q39,21 37,21 L24,21 L24,30 L15,30 Z M49,34 L49,52 L26,52 Q15,52 15,41 L15,38 L25,38 L25,41 Q25,43 27,43 L40,43 L40,34 Z" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#F8FAFC">
+                        <GeometryDrawing.Geometry>
+                            <PathGeometry Figures="M31,26 L45,26 L45,36 L31,36 Z M19,31 L33,31 L33,41 L19,41 Z" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <Style TargetType="{x:Type Window}">
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="Icon" Value="{StaticResource AppIconImage}" />
+        </Style>
+
+        <Style TargetType="{x:Type Button}">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="#222938" />
+            <Setter Property="BorderBrush" Value="#384153" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="#2B3446" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#526074" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="#EF233C" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#EF233C" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        </Style>
     </Application.Resources>
 </Application>

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Clipboard,
+  ClipboardCheck,
   Crop,
   Download,
   Eraser,
   FolderOpen,
   Image as ImageIcon,
+  Keyboard,
   Minus,
   MousePointer2,
   Pencil,
@@ -17,7 +19,13 @@ import {
   Undo2,
   X
 } from "lucide-react";
-import type { HistoryItem } from "./electron";
+import type {
+  AppSettings,
+  HistoryItem,
+  ShortcutAction,
+  ShortcutOptions,
+  ShortcutRegistration
+} from "./electron";
 
 type Point = { x: number; y: number };
 type Tool = "pen" | "rect" | "arrow" | "text" | "blur";
@@ -32,13 +40,31 @@ type Stroke = {
 const colors = ["#ff4d4d", "#38d996", "#4da3ff", "#ffd166", "#ffffff", "#111318"];
 
 export function App() {
+  if (!window.multisnap) {
+    return <BrowserFallback />;
+  }
+
   const isOverlay = window.location.hash === "#/overlay";
   return isOverlay ? <OverlayCapture /> : <MainApp />;
+}
+
+function BrowserFallback() {
+  return (
+    <main className="browserFallback">
+      <div>
+        <h1>MultiSnap Electron</h1>
+        <p>Dev renderer is ready. Capture, tray, and editor controls are available in Electron.</p>
+      </div>
+    </main>
+  );
 }
 
 function MainApp() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [image, setImage] = useState<string | null>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [shortcutOptions, setShortcutOptions] = useState<ShortcutOptions | null>(null);
+  const [shortcutRegistration, setShortcutRegistration] = useState<ShortcutRegistration | null>(null);
 
   const refreshHistory = async () => {
     setHistory(await window.multisnap.getHistory());
@@ -46,19 +72,40 @@ function MainApp() {
 
   useEffect(() => {
     void refreshHistory();
+    void window.multisnap.getSettings().then(setSettings);
+    void window.multisnap.getShortcutOptions().then(setShortcutOptions);
+    void window.multisnap.getShortcutRegistration().then(setShortcutRegistration);
     const offImage = window.multisnap.onEditorImage((dataUrl) => setImage(dataUrl));
     const offHistory = window.multisnap.onHistoryChanged(() => void refreshHistory());
+    const offSettings = window.multisnap.onSettingsChanged(setSettings);
+    const offShortcutRegistration =
+      window.multisnap.onShortcutRegistrationChanged(setShortcutRegistration);
     return () => {
       offImage();
       offHistory();
+      offSettings();
+      offShortcutRegistration();
     };
   }, []);
+
+  const updateShortcut = async (action: ShortcutAction, accelerator: string) => {
+    setSettings(await window.multisnap.setShortcut(action, accelerator));
+  };
+
+  if (image) {
+    return <Editor image={image} onClose={() => setImage(null)} onSaved={refreshHistory} />;
+  }
 
   return (
     <main className="appShell">
       <aside className="sidePanel">
         <div className="brandBlock">
-          <div className="brandMark">M</div>
+          <div className="brandMark" aria-hidden="true">
+            <span className="markHook markHookTop" />
+            <span className="markHook markHookBottom" />
+            <span className="markTile markTileRight" />
+            <span className="markTile markTileLeft" />
+          </div>
           <div>
             <h1>MultiSnap</h1>
             <p>Capture, mark up, ship.</p>
@@ -75,6 +122,15 @@ function MainApp() {
             Full screen
           </button>
         </div>
+
+        {settings && shortcutOptions && (
+          <SettingsPane
+            options={shortcutOptions}
+            registration={shortcutRegistration}
+            settings={settings}
+            onShortcutChange={updateShortcut}
+          />
+        )}
 
         <section className="historyPane">
           <div className="sectionTitle">
@@ -109,11 +165,80 @@ function MainApp() {
           <div className="startSurface">
             <MousePointer2 size={42} />
             <h2>Ready to capture</h2>
-            <p>Use the buttons on the left or press Ctrl+Shift+5 for area capture.</p>
+            <p>Use the buttons on the left or press Print Screen for area capture.</p>
           </div>
         )}
       </section>
     </main>
+  );
+}
+
+function SettingsPane({
+  options,
+  registration,
+  settings,
+  onShortcutChange
+}: {
+  options: ShortcutOptions;
+  registration: ShortcutRegistration | null;
+  settings: AppSettings;
+  onShortcutChange: (action: ShortcutAction, accelerator: string) => Promise<void>;
+}) {
+  return (
+    <section className="settingsPane">
+      <div className="sectionTitle">
+        <span>Settings</span>
+        <Keyboard size={16} />
+      </div>
+      <ShortcutSelect
+        action="area"
+        label="Area capture"
+        options={options.area}
+        isRegistered={registration?.area ?? false}
+        value={settings.shortcuts.area}
+        onChange={onShortcutChange}
+      />
+      <ShortcutSelect
+        action="full"
+        label="Full screen"
+        options={options.full}
+        isRegistered={registration?.full ?? false}
+        value={settings.shortcuts.full}
+        onChange={onShortcutChange}
+      />
+    </section>
+  );
+}
+
+function ShortcutSelect({
+  action,
+  label,
+  options,
+  isRegistered,
+  value,
+  onChange
+}: {
+  action: ShortcutAction;
+  label: string;
+  options: ShortcutOptions[ShortcutAction];
+  isRegistered: boolean;
+  value: string;
+  onChange: (action: ShortcutAction, accelerator: string) => Promise<void>;
+}) {
+  return (
+    <label className="shortcutRow">
+      <span>{label}</span>
+      <select value={value} onChange={(event) => void onChange(action, event.target.value)}>
+        {options.map((option) => (
+          <option key={option.accelerator} value={option.accelerator}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <em className={isRegistered ? "shortcutStatus active" : "shortcutStatus blocked"}>
+        {isRegistered ? "Active" : "Unavailable"}
+      </em>
+    </label>
   );
 }
 
@@ -202,12 +327,27 @@ function OverlayCapture() {
         setCurrent({ x: event.clientX, y: event.clientY });
       }}
       onMouseMove={(event) => {
-        if (start) setCurrent({ x: event.clientX, y: event.clientY });
+        if (!start) return;
+        if (!event.shiftKey) {
+          setCurrent({ x: event.clientX, y: event.clientY });
+          return;
+        }
+        const deltaX = event.clientX - start.x;
+        const deltaY = event.clientY - start.y;
+        const side = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+        setCurrent({
+          x: start.x + Math.sign(deltaX || 1) * side,
+          y: start.y + Math.sign(deltaY || 1) * side
+        });
       }}
       onMouseUp={() => void cropSelection()}
     >
-      {screenshot && <img ref={imageRef} src={screenshot} className="overlayShot" draggable={false} />}
-      <div className="overlayShade" />
+      {screenshot && (
+        <>
+          <img ref={imageRef} src={screenshot} className="overlayShot" draggable={false} />
+          {!rect && <div className="overlayShade" />}
+        </>
+      )}
       {rect && (
         <div
           className="selectionRect"
@@ -223,7 +363,11 @@ function OverlayCapture() {
           </span>
         </div>
       )}
-      <div className="overlayHint">Drag to select area. Esc cancels.</div>
+      <div className="overlayInfo">
+        <strong>Щелкните и потяните, чтобы снять область экрана</strong>
+        <span>Shift - квадратная область</span>
+        <span>Esc - отмена</span>
+      </div>
     </div>
   );
 }
@@ -239,11 +383,13 @@ function Editor({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const baseImageRef = useRef<HTMLImageElement | null>(null);
+  const copyResetTimerRef = useRef<number | null>(null);
   const [tool, setTool] = useState<Tool>("pen");
   const [color, setColor] = useState(colors[0]);
   const [width, setWidth] = useState(4);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [draft, setDraft] = useState<Stroke | null>(null);
+  const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -270,6 +416,14 @@ function Editor({
 
   useEffect(draw, [strokes, draft]);
 
+  useEffect(() => {
+    return () => {
+      if (copyResetTimerRef.current) {
+        window.clearTimeout(copyResetTimerRef.current);
+      }
+    };
+  }, []);
+
   const canvasPoint = (event: React.PointerEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current!;
     const box = canvas.getBoundingClientRect();
@@ -279,68 +433,56 @@ function Editor({
     };
   };
 
-  const exportImage = () => canvasRef.current?.toDataURL("image/png") ?? image;
+  const exportImage = () => {
+    const base = baseImageRef.current;
+    if (!base) return canvasRef.current?.toDataURL("image/png") ?? image;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = base.naturalWidth;
+    canvas.height = base.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return image;
+
+    ctx.drawImage(base, 0, 0);
+    [...strokes, draft].filter(Boolean).forEach((stroke) => renderStroke(ctx, stroke as Stroke));
+    return canvas.toDataURL("image/png");
+  };
+
+  const copyEditedImage = async () => {
+    await window.multisnap.copyImage(exportImage());
+    setCopyState("copied");
+    if (copyResetTimerRef.current) {
+      window.clearTimeout(copyResetTimerRef.current);
+    }
+    copyResetTimerRef.current = window.setTimeout(() => setCopyState("idle"), 1400);
+  };
+
+  const saveEditedImage = async () => {
+    const saved = await window.multisnap.saveImage(exportImage());
+    if (saved) await onSaved();
+  };
 
   return (
     <div className="editorShell">
-      <header className="toolbar">
-        <ToolButton active={tool === "pen"} label="Pen" onClick={() => setTool("pen")}>
-          <Pencil size={17} />
-        </ToolButton>
-        <ToolButton active={tool === "rect"} label="Rectangle" onClick={() => setTool("rect")}>
-          <RectangleHorizontal size={17} />
-        </ToolButton>
-        <ToolButton active={tool === "arrow"} label="Arrow" onClick={() => setTool("arrow")}>
-          <ArrowUpRight size={17} />
-        </ToolButton>
-        <ToolButton active={tool === "text"} label="Text" onClick={() => setTool("text")}>
-          <Type size={17} />
-        </ToolButton>
-        <ToolButton active={tool === "blur"} label="Blur" onClick={() => setTool("blur")}>
-          <Eraser size={17} />
-        </ToolButton>
-        <div className="divider" />
-        <div className="swatches">
-          {colors.map((item) => (
-            <button
-              aria-label={`Use ${item}`}
-              className={item === color ? "swatch active" : "swatch"}
-              key={item}
-              onClick={() => setColor(item)}
-              style={{ backgroundColor: item }}
-            />
-          ))}
-        </div>
-        <label className="widthControl">
-          <Minus size={14} />
-          <input
-            max={18}
-            min={2}
-            type="range"
-            value={width}
-            onChange={(event) => setWidth(Number(event.target.value))}
-          />
-        </label>
-        <div className="spacer" />
-        <button className="iconButton" title="Undo" onClick={() => setStrokes((items) => items.slice(0, -1))}>
+      <header className="editorTitlebar">
+        <button className="topIconButton" title="Undo" onClick={() => setStrokes((items) => items.slice(0, -1))}>
           <Undo2 size={17} />
         </button>
-        <button className="iconButton" title="Copy" onClick={() => window.multisnap.copyImage(exportImage())}>
-          <Clipboard size={17} />
-        </button>
-        <button
-          className="saveButton"
-          onClick={async () => {
-            const saved = await window.multisnap.saveImage(exportImage());
-            if (saved) await onSaved();
-          }}
-        >
-          <Save size={17} />
-          Save
-        </button>
-        <button className="iconButton" title="Close editor" onClick={onClose}>
-          <X size={17} />
-        </button>
+        <div className="editorTitle">Monosnap Codex {new Date().toLocaleString()}</div>
+        <div className="editorTopActions">
+          <button className="titleActionButton copyTitleButton" title="Copy edited screenshot to clipboard" onClick={() => void copyEditedImage()}>
+            {copyState === "copied" ? <ClipboardCheck size={17} /> : <Clipboard size={17} />}
+            {copyState === "copied" ? "Copied" : "Copy"}
+          </button>
+          <button className="titleActionButton" onClick={() => void saveEditedImage()}>
+            <Save size={17} />
+            Save PNG
+          </button>
+          <button className="titleActionButton" title="Close editor" onClick={onClose}>
+            <X size={17} />
+            Close
+          </button>
+        </div>
       </header>
 
       <div className="canvasStage">
@@ -367,6 +509,67 @@ function Editor({
           }}
         />
       </div>
+
+      <footer className="toolbar bottomToolbar">
+        <div className="toolbarTools">
+          <ToolButton active={tool === "pen"} label="Pen" onClick={() => setTool("pen")}>
+            <Pencil size={17} />
+          </ToolButton>
+          <ToolButton active={tool === "rect"} label="Rectangle" onClick={() => setTool("rect")}>
+            <RectangleHorizontal size={17} />
+          </ToolButton>
+          <ToolButton active={tool === "arrow"} label="Arrow" onClick={() => setTool("arrow")}>
+            <ArrowUpRight size={17} />
+          </ToolButton>
+          <ToolButton active={tool === "text"} label="Text" onClick={() => setTool("text")}>
+            <Type size={17} />
+          </ToolButton>
+          <ToolButton active={tool === "blur"} label="Blur" onClick={() => setTool("blur")}>
+            <Eraser size={17} />
+          </ToolButton>
+          <div className="divider" />
+          <div className="swatches">
+            {colors.map((item) => (
+              <button
+                aria-label={`Use ${item}`}
+                className={item === color ? "swatch active" : "swatch"}
+                key={item}
+                onClick={() => setColor(item)}
+                style={{ backgroundColor: item }}
+              />
+            ))}
+          </div>
+          <label className="widthControl">
+            <Minus size={14} />
+            <input
+              max={18}
+              min={2}
+              type="range"
+              value={width}
+              onChange={(event) => setWidth(Number(event.target.value))}
+            />
+          </label>
+        </div>
+        <div className="toolbarActions">
+          <button className="copyButton" title="Copy edited screenshot to clipboard" onClick={() => void copyEditedImage()}>
+            {copyState === "copied" ? <ClipboardCheck size={17} /> : <Clipboard size={17} />}
+            {copyState === "copied" ? "Скопировано" : "Буфер"}
+          </button>
+          <button
+            className="saveButton"
+            onClick={async () => {
+              const saved = await window.multisnap.saveImage(exportImage());
+              if (saved) await onSaved();
+            }}
+          >
+            <Save size={17} />
+            Save
+          </button>
+          <button className="iconButton" title="Close editor" onClick={onClose}>
+            <X size={17} />
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }

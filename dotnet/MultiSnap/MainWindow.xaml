@@ -2,55 +2,56 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MultiSnap" Height="760" Width="1120" MinHeight="560" MinWidth="860"
-        Background="#111318" WindowStartupLocation="CenterScreen">
+        Background="{StaticResource AppBackgroundBrush}" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300" />
+            <ColumnDefinition Width="318" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border Background="#181b22" Padding="18">
+        <Border Background="{StaticResource PanelBackgroundBrush}" Padding="22" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,0,1,0">
             <DockPanel LastChildFill="True">
-                <StackPanel DockPanel.Dock="Top">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,22">
-                        <Border Width="44" Height="44" Background="#ef1f2d" CornerRadius="8" Margin="0,0,12,0">
-                            <TextBlock Text="M" Foreground="White" FontSize="24" FontWeight="Bold"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,22">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                        <Border Width="48" Height="48" CornerRadius="10" Background="#10141C" Margin="0,0,14,0">
+                            <Image Source="{StaticResource AppIconImage}" Width="48" Height="48" />
                         </Border>
                         <StackPanel>
-                            <TextBlock Text="MultiSnap" Foreground="White" FontSize="24" FontWeight="SemiBold" />
-                            <TextBlock Text=".NET WPF port" Foreground="#9aa3b2" />
+                            <TextBlock Text="MultiSnap" Foreground="{StaticResource TextPrimaryBrush}" FontSize="25" FontWeight="SemiBold" />
+                            <TextBlock Text="Capture, mark up, ship." Foreground="{StaticResource TextSecondaryBrush}" Margin="0,3,0,0" />
                         </StackPanel>
                     </StackPanel>
 
-                    <Button Content="Capture Area" Height="42" Margin="0,0,0,10" Click="CaptureArea_Click" />
-                    <Button Content="Full Screen" Height="42" Margin="0,0,0,22" Click="CaptureFull_Click" />
+                    <Button Content="Capture Area" Height="44" Margin="0,0,0,10" Click="CaptureArea_Click" Style="{StaticResource PrimaryButtonStyle}" />
+                    <Button Content="Full Screen" Height="44" Margin="0,0,0,24" Click="CaptureFull_Click" />
 
-                    <TextBlock Text="Settings" Foreground="White" FontWeight="SemiBold" Margin="0,0,0,8" />
-                    <Border BorderBrush="#2a303b" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,22">
+                    <TextBlock Text="Settings" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <Border BorderBrush="{StaticResource StrokeBrush}" Background="#1D2330" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,22">
                         <StackPanel>
-                            <TextBlock Text="Area capture hotkey" Foreground="#cbd3df" />
-                            <TextBlock Text="Ctrl+Print Screen" Foreground="#ffffff" FontWeight="SemiBold" Margin="0,4,0,0" />
-                            <TextBlock x:Name="HotkeyStatusText" Text="Checking..." Foreground="#ffd166" Margin="0,6,0,0" />
+                            <TextBlock Text="Area capture hotkey" Foreground="#CBD5E1" />
+                            <TextBlock x:Name="AreaHotkeyText" Text="Ctrl+PrintScreen" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,4,0,0" />
+                            <Border Background="#10141C" CornerRadius="6" Padding="8,5" HorizontalAlignment="Left" Margin="0,9,0,0">
+                                <TextBlock x:Name="HotkeyStatusText" Text="Checking..." Foreground="{StaticResource AccentWarmBrush}" FontWeight="SemiBold" />
+                            </Border>
                         </StackPanel>
                     </Border>
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Bottom">
-                    <TextBlock Text="Captured images are copied to clipboard immediately." Foreground="#8d97a8"
+                    <TextBlock x:Name="ClipboardStatusText" Text="Captured images are copied to clipboard immediately." Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <Grid Grid.Column="1" Background="#111318">
+        <Grid Grid.Column="1" Background="{StaticResource AppBackgroundBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <ToolBarTray Background="#151922">
-                <ToolBar Background="#151922">
+            <ToolBarTray Background="#121722">
+                <ToolBar Background="#121722" Foreground="{StaticResource TextPrimaryBrush}">
                     <Button Content="Copy" Click="Copy_Click" />
                     <Button Content="Save PNG" Click="Save_Click" />
                     <Separator />
@@ -58,11 +59,15 @@
                 </ToolBar>
             </ToolBarTray>
 
-            <Border Grid.Row="1" Margin="18" Background="#0c0f14" BorderBrush="#2a303b" BorderThickness="1">
+            <Border Grid.Row="1" Margin="22" Background="{StaticResource SurfaceBackgroundBrush}" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1" CornerRadius="8">
                 <Grid x:Name="EditorSurface" ClipToBounds="True">
-                    <TextBlock x:Name="EmptyState" Text="Ready to capture" Foreground="#dce3ee"
-                               FontSize="30" FontWeight="SemiBold" HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
+                    <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Image Source="{StaticResource AppIconImage}" Width="74" Height="74" Opacity="0.95" Margin="0,0,0,18" />
+                        <TextBlock Text="Ready to capture" Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="30" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <TextBlock Text="Use the tray hotkey or capture buttons to start." Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,8,0,0" HorizontalAlignment="Center" />
+                    </StackPanel>
                     <Image x:Name="CaptureImage" Stretch="Uniform" />
                     <InkCanvas x:Name="InkLayer" Background="Transparent" EditingMode="Ink" />
                 </Grid>

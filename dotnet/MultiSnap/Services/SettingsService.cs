@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using MultiSnap.Core;
 
 namespace MultiSnap.Services;
 
@@ -26,7 +27,7 @@ public sealed class SettingsService
             }
 
             var settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(_settingsPath));
-            return settings ?? Save(new AppSettings());
+            return settings is null ? Save(new AppSettings()) : AppSettingsContract.Normalize(settings);
         }
         catch
         {
@@ -36,6 +37,7 @@ public sealed class SettingsService
 
     public AppSettings Save(AppSettings settings)
     {
+        AppSettingsContract.Normalize(settings);
         File.WriteAllText(_settingsPath, JsonSerializer.Serialize(settings, _jsonOptions));
         return settings;
     }

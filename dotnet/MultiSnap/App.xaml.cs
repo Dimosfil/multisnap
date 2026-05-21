@@ -1,7 +1,9 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Forms;
+using DrawingIcon = System.Drawing.Icon;
 using System.Windows.Media.Imaging;
+using MultiSnap.Core;
 using MultiSnap.Services;
 using Serilog;
 using Application = System.Windows.Application;
@@ -15,6 +17,7 @@ public partial class App : Application
     private readonly SettingsService _settings = new();
     private readonly ScreenCaptureService _capture = new();
     private readonly HotkeyService _hotkeys = new();
+    private AppSettings _currentSettings = new();
     private NotifyIcon? _tray;
     private MainWindow? _mainWindow;
     private bool _isQuitting;
@@ -25,16 +28,15 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         ConfigureLogging();
 
-        _settings.Load();
-        _mainWindow = new MainWindow(_capture, StartAreaCapture, CaptureFullScreen);
+        _currentSettings = _settings.Load();
+        _mainWindow = new MainWindow(_capture, StartAreaCapture, CaptureFullScreen, _currentSettings);
         MainWindow = _mainWindow;
         _mainWindow.SourceInitialized += (_, _) =>
         {
-            var registered = _hotkeys.Register(new System.Windows.Interop.WindowInteropHelper(_mainWindow));
-            _mainWindow.SetHotkeyStatus(registered);
+            var registered = RegisterHotkey();
             if (!registered)
             {
-                Log.Warning("Ctrl+PrintScreen hotkey registration failed.");
+                Log.Warning("{Hotkey} hotkey registration failed.", _currentSettings.AreaCaptureHotkey);
             }
         };
         _mainWindow.Closing += (_, args) =>
@@ -50,7 +52,11 @@ public partial class App : Application
 
         _hotkeys.AreaCaptureRequested += (_, _) => Dispatcher.Invoke(StartAreaCapture);
         CreateTray();
-        _mainWindow.Show();
+        if (!_currentSettings.StartMinimizedToTray)
+        {
+            _mainWindow.Show();
+        }
+
         Log.Information("MultiSnap .NET WPF started.");
     }
 
@@ -81,18 +87,31 @@ public partial class App : Application
         _tray = new NotifyIcon
         {
             Text = "MultiSnap",
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = GetTrayIcon(),
             Visible = true,
             ContextMenuStrip = new ContextMenuStrip()
         };
 
         _tray.ContextMenuStrip.Items.Add("Capture area", null, (_, _) => StartAreaCapture());
         _tray.ContextMenuStrip.Items.Add("Capture full screen", null, (_, _) => CaptureFullScreen());
+        _tray.ContextMenuStrip.Items.Add("Settings...", null, (_, _) => ShowSettingsWindow());
         _tray.ContextMenuStrip.Items.Add("Show MultiSnap", null, (_, _) => ShowMainWindow());
         _tray.ContextMenuStrip.Items.Add(new ToolStripSeparator());
         _tray.ContextMenuStrip.Items.Add("Quit", null, (_, _) => Quit());
-        _tray.Click += (_, _) => StartAreaCapture();
+        _tray.MouseClick += (_, args) =>
+        {
+            if (args.Button == MouseButtons.Left)
+            {
+                StartAreaCapture();
+            }
+        };
         _tray.DoubleClick += (_, _) => ShowMainWindow();
+    }
+
+    private static DrawingIcon GetTrayIcon()
+    {
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "MultiSnap.ico");
+        return File.Exists(iconPath) ? new DrawingIcon(iconPath) : System.Drawing.SystemIcons.Application;
     }
 
     private void ShowMainWindow()
@@ -101,12 +120,36 @@ public partial class App : Application
         _mainWindow?.Activate();
     }
 
+    private void ShowSettingsWindow()
+    {
+        if (_mainWindow is null)
+        {
+            return;
+        }
+
+        ShowMainWindow();
+        var window = new SettingsWindow(_currentSettings) { Owner = _mainWindow };
+        if (window.ShowDialog() != true)
+        {
+            return;
+        }
+
+        _currentSettings = _settings.Save(window.Settings);
+        _mainWindow.ApplySettings(_currentSettings);
+        RegisterHotkey();
+    }
+
     private void StartAreaCapture()
     {
         try
         {
             var screenshot = _capture.CaptureCursorDisplay();
-            var overlay = new OverlayWindow(screenshot, _capture) { Owner = _mainWindow };
+            var overlay = new OverlayWindow(screenshot, _capture);
+            if (_mainWindow?.IsVisible == true)
+            {
+                overlay.Owner = _mainWindow;
+            }
+
             if (overlay.ShowDialog() == true && overlay.CapturedImage is not null)
             {
                 OpenEditor(overlay.CapturedImage);
@@ -134,9 +177,26 @@ public partial class App : Application
 
     private void OpenEditor(BitmapSource image)
     {
-        Clipboard.SetImage(image);
+        if (_currentSettings.CopyCapturedImageToClipboard)
+        {
+            Clipboard.SetImage(image);
+        }
+
         ShowMainWindow();
         _mainWindow?.LoadImage(image);
+    }
+
+    private bool RegisterHotkey()
+    {
+        if (_mainWindow is null)
+        {
+            return false;
+        }
+
+        var helper = new System.Windows.Interop.WindowInteropHelper(_mainWindow);
+        var registered = _hotkeys.Register(helper, _currentSettings);
+        _mainWindow.SetHotkeyStatus(registered, _currentSettings.AreaCaptureHotkey);
+        return registered;
     }
 
     private void Quit()

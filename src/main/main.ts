@@ -23,6 +23,44 @@ type HistoryItem = {
   createdAt: string;
 };
 
+type ShortcutAction = "area" | "full";
+type ShortcutOption = {
+  accelerator: string;
+  label: string;
+};
+type AppSettings = {
+  shortcuts: Record<ShortcutAction, string>;
+};
+type AppSettingsUpdate = {
+  shortcuts?: Partial<Record<ShortcutAction, string>>;
+};
+type ShortcutRegistration = Record<ShortcutAction, boolean>;
+
+const shortcutOptions: Record<ShortcutAction, ShortcutOption[]> = {
+  area: [
+    { accelerator: "Control+PrintScreen", label: "Ctrl+Print Screen" },
+    { accelerator: "PrintScreen", label: "Print Screen" },
+    { accelerator: "CommandOrControl+Shift+5", label: "Ctrl+Shift+5" }
+  ],
+  full: [
+    { accelerator: "CommandOrControl+Shift+6", label: "Ctrl+Shift+6" }
+  ]
+};
+
+const defaultSettings: AppSettings = {
+  shortcuts: {
+    area: "Control+PrintScreen",
+    full: "CommandOrControl+Shift+6"
+  }
+};
+
+const legacyDefaultSettings: AppSettings = {
+  shortcuts: {
+    area: "PrintScreen",
+    full: "Control+PrintScreen"
+  }
+};
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = !app.isPackaged;
 
@@ -30,6 +68,12 @@ let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuitting = false;
+let registeredShortcutAccelerators: string[] = [];
+let pendingOverlayDataUrl: string | null = null;
+let shortcutRegistration: ShortcutRegistration = {
+  area: false,
+  full: false
+};
 
 const rendererUrl = isDev
   ? "http://127.0.0.1:5187"
@@ -41,6 +85,10 @@ function getPreloadPath() {
 
 function historyPath() {
   return path.join(app.getPath("userData"), "history.json");
+}
+
+function settingsPath() {
+  return path.join(app.getPath("userData"), "settings.json");
 }
 
 async function ensureScreenshotDir() {
@@ -63,6 +111,54 @@ async function writeHistory(items: HistoryItem[]) {
   await fs.writeFile(historyPath(), JSON.stringify(items.slice(0, 50), null, 2), "utf8");
 }
 
+function isShortcutAction(value: string): value is ShortcutAction {
+  return value === "area" || value === "full";
+}
+
+function sanitizeShortcut(action: ShortcutAction, accelerator: unknown) {
+  const value = typeof accelerator === "string" ? accelerator : defaultSettings.shortcuts[action];
+  return shortcutOptions[action].some((option) => option.accelerator === value)
+    ? value
+    : defaultSettings.shortcuts[action];
+}
+
+function sanitizeSettings(value: unknown): AppSettings {
+  const candidate = value as Partial<AppSettings> | null;
+  return {
+    shortcuts: {
+      area: sanitizeShortcut("area", candidate?.shortcuts?.area),
+      full: sanitizeShortcut("full", candidate?.shortcuts?.full)
+    }
+  };
+}
+
+function isLegacyDefaultSettings(value: unknown) {
+  const candidate = value as Partial<AppSettings> | null;
+  return (
+    candidate?.shortcuts?.area === legacyDefaultSettings.shortcuts.area &&
+    candidate.shortcuts.full === legacyDefaultSettings.shortcuts.full
+  );
+}
+
+async function readSettings(): Promise<AppSettings> {
+  try {
+    const raw = await fs.readFile(settingsPath(), "utf8");
+    const parsed = JSON.parse(raw);
+    if (isLegacyDefaultSettings(parsed)) {
+      await writeSettings(defaultSettings);
+      return defaultSettings;
+    }
+    return sanitizeSettings(parsed);
+  } catch {
+    return defaultSettings;
+  }
+}
+
+async function writeSettings(settings: AppSettings) {
+  await fs.mkdir(path.dirname(settingsPath()), { recursive: true });
+  await fs.writeFile(settingsPath(), JSON.stringify(settings, null, 2), "utf8");
+}
+
 function imageFromDataUrl(dataUrl: string) {
   return nativeImage.createFromDataURL(dataUrl);
 }
@@ -72,19 +168,22 @@ function timestampName() {
   return `multisnap-${stamp}.png`;
 }
 
-async function capturePrimaryScreen() {
-  const primary = screen.getPrimaryDisplay();
-  const size = primary.size;
+function getCursorDisplay() {
+  return screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+}
+
+async function captureDisplay(display = getCursorDisplay()) {
+  const size = display.size;
   const sources = await desktopCapturer.getSources({
     types: ["screen"],
     thumbnailSize: {
-      width: Math.round(size.width * primary.scaleFactor),
-      height: Math.round(size.height * primary.scaleFactor)
+      width: Math.round(size.width * display.scaleFactor),
+      height: Math.round(size.height * display.scaleFactor)
     }
   });
 
   const source =
-    sources.find((item) => item.display_id === String(primary.id)) ??
+    sources.find((item) => item.display_id === String(display.id)) ??
     sources.find((item) => item.name.toLowerCase().includes("screen")) ??
     sources[0];
 
@@ -114,6 +213,7 @@ async function saveDataUrl(dataUrl: string, explicitPath?: string) {
 
 async function createMainWindow() {
   mainWindow = new BrowserWindow({
+    show: false,
     width: 1120,
     height: 760,
     minWidth: 860,
@@ -142,7 +242,8 @@ async function createOverlayWindow() {
     return;
   }
 
-  const display = screen.getPrimaryDisplay();
+  const display = getCursorDisplay();
+  pendingOverlayDataUrl = await captureDisplay(display);
   overlayWindow = new BrowserWindow({
     x: display.bounds.x,
     y: display.bounds.y,
@@ -165,45 +266,121 @@ async function createOverlayWindow() {
 
   overlayWindow.on("closed", () => {
     overlayWindow = null;
+    pendingOverlayDataUrl = null;
   });
 
   await overlayWindow.loadURL(`${rendererUrl}#/overlay`);
 }
 
 function createTray() {
-  const icon = nativeImage.createEmpty();
+  const icon = nativeImage.createFromDataURL(
+    `data:image/svg+xml,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+        <rect x="3" y="3" width="26" height="26" rx="6" fill="#1f232b"/>
+        <rect x="8" y="8" width="16" height="16" rx="3" fill="#ef1f2d"/>
+      </svg>
+    `)}`
+  );
   tray = new Tray(icon);
   tray.setToolTip("MultiSnap");
   tray.setContextMenu(
     Menu.buildFromTemplate([
-      { label: "Capture area", click: () => createOverlayWindow() },
-      { label: "Capture full screen", click: () => captureFullToEditor() },
+      { label: "Выделить область", click: () => createOverlayWindow() },
+      { label: "Снять весь экран", click: () => captureFullToEditor() },
       { type: "separator" },
-      { label: "Show MultiSnap", click: () => mainWindow?.show() },
-      { label: "Quit", click: () => app.quit() }
+      { label: "Показать MultiSnap", click: () => showMainWindow() },
+      { label: "Выход", click: () => app.quit() }
     ])
   );
+  tray.on("click", () => createOverlayWindow());
+  tray.on("double-click", () => showMainWindow());
+}
+
+function showMainWindow() {
+  mainWindow?.show();
+  mainWindow?.focus();
 }
 
 async function captureFullToEditor() {
-  const dataUrl = await capturePrimaryScreen();
-  mainWindow?.show();
+  const dataUrl = await captureDisplay();
+  clipboard.writeImage(imageFromDataUrl(dataUrl));
+  showMainWindow();
   mainWindow?.webContents.send("editor-image", dataUrl);
 }
 
-function registerShortcuts() {
-  globalShortcut.register("CommandOrControl+Shift+5", () => {
-    void createOverlayWindow();
+async function getOverlayCapture() {
+  return pendingOverlayDataUrl ?? captureDisplay();
+}
+
+async function registerShortcuts() {
+  registeredShortcutAccelerators.forEach((accelerator) => globalShortcut.unregister(accelerator));
+  registeredShortcutAccelerators = [];
+  shortcutRegistration = {
+    area: false,
+    full: false
+  };
+  const settings = await readSettings();
+  const handlers: Record<ShortcutAction, () => void> = {
+    area: () => {
+      void createOverlayWindow();
+    },
+    full: () => {
+      void captureFullToEditor();
+    }
+  };
+
+  (Object.keys(settings.shortcuts) as ShortcutAction[]).forEach((action) => {
+    const accelerator = settings.shortcuts[action];
+    if (globalShortcut.register(accelerator, handlers[action])) {
+      registeredShortcutAccelerators.push(accelerator);
+      shortcutRegistration[action] = true;
+    }
   });
-  globalShortcut.register("CommandOrControl+Shift+6", () => {
-    void captureFullToEditor();
+  mainWindow?.webContents.send("shortcut-registration-changed", shortcutRegistration);
+}
+
+async function updateSettings(nextSettings: AppSettingsUpdate) {
+  const current = await readSettings();
+  const settings = sanitizeSettings({
+    shortcuts: {
+      ...current.shortcuts,
+      ...nextSettings.shortcuts
+    }
+  });
+  await writeSettings(settings);
+  await registerShortcuts();
+  mainWindow?.webContents.send("settings-changed", settings);
+  return settings;
+}
+
+function getShortcutOptions() {
+  return shortcutOptions;
+}
+
+function getShortcutRegistration() {
+  return shortcutRegistration;
+}
+
+function actionFromShortcutChannel(value: unknown): ShortcutAction | null {
+  return typeof value === "string" && isShortcutAction(value) ? value : null;
+}
+
+function setShortcut(actionValue: unknown, accelerator: unknown) {
+  const action = actionFromShortcutChannel(actionValue);
+  if (!action) {
+    throw new Error("Unknown shortcut action.");
+  }
+  return updateSettings({
+    shortcuts: {
+      [action]: sanitizeShortcut(action, accelerator)
+    }
   });
 }
 
 app.whenReady().then(async () => {
   await createMainWindow();
   createTray();
-  registerShortcuts();
+  await registerShortcuts();
 });
 
 app.on("will-quit", () => {
@@ -211,15 +388,22 @@ app.on("will-quit", () => {
   globalShortcut.unregisterAll();
 });
 
-ipcMain.handle("capture-screen", capturePrimaryScreen);
+ipcMain.handle("capture-screen", getOverlayCapture);
 ipcMain.handle("capture-full", captureFullToEditor);
+ipcMain.handle("get-settings", readSettings);
+ipcMain.handle("get-shortcut-options", getShortcutOptions);
+ipcMain.handle("get-shortcut-registration", getShortcutRegistration);
+ipcMain.handle("set-shortcut", (_event, action: unknown, accelerator: unknown) =>
+  setShortcut(action, accelerator)
+);
 ipcMain.handle("show-overlay", createOverlayWindow);
 ipcMain.handle("hide-overlay", () => {
   overlayWindow?.close();
 });
 ipcMain.handle("submit-capture", (_event, dataUrl: string) => {
+  clipboard.writeImage(imageFromDataUrl(dataUrl));
   overlayWindow?.close();
-  mainWindow?.show();
+  showMainWindow();
   mainWindow?.webContents.send("editor-image", dataUrl);
 });
 ipcMain.handle("copy-image", (_event, dataUrl: string) => {

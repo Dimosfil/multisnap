@@ -175,6 +175,20 @@ or:
   test commands and produce a compact verification plan for the current feature,
   bug fix, or release check. Plan first; run checks only when the user asks or
   when the current task already requires verification.
+- Treat `gi install`, `gi инсталл`, `ги инсталл`, and obvious typo variants
+  such as `gi иснтлл` as requests to build the current project and produce an
+  installer. Use Inno Setup by default when no installer tool is named. If the
+  user writes a program after `gi install` / `gi инсталл`, use that program as
+  the preferred packaging tool. Read project-local build and packaging
+  instructions, scripts, manifests, and installer configs first; ask a short
+  clarification question if the build or installer contract is missing instead
+  of inventing one. Before packaging, resolve the application version from
+  project-local metadata such as manifests, package files, assembly attributes,
+  release files, or installer configs. Keep the production build, installer
+  metadata, and installer filename aligned with that version when local tooling
+  supports it. Do not use shared-instruction version numbers such as `VERSION.md`
+  as the application version for another project. After success, report the
+  build result, installer artifact path, version used, and checks performed.
 - Treat a first message that points to a shared instruction library as an
   instruction bootstrap, not as a request to add that library as a dependency.
 - If the user asks to update from a shared instruction library and this project

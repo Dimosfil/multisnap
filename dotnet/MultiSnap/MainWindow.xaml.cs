@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
+using MultiSnap.Core;
 using MultiSnap.Services;
 using Serilog;
 using WpfClipboard = System.Windows.Clipboard;
@@ -15,17 +16,20 @@ public partial class MainWindow : Window
     private readonly ScreenCaptureService _capture;
     private readonly Action _startAreaCapture;
     private readonly Action _captureFullScreen;
+    private AppSettings _settings;
     private BitmapSource? _currentImage;
 
-    public MainWindow(ScreenCaptureService capture, Action startAreaCapture, Action captureFullScreen)
+    public MainWindow(ScreenCaptureService capture, Action startAreaCapture, Action captureFullScreen, AppSettings settings)
     {
         _capture = capture;
         _startAreaCapture = startAreaCapture;
         _captureFullScreen = captureFullScreen;
+        _settings = settings;
         InitializeComponent();
         InkLayer.DefaultDrawingAttributes.Color = Colors.Red;
         InkLayer.DefaultDrawingAttributes.Width = 3;
         InkLayer.DefaultDrawingAttributes.Height = 3;
+        ApplySettings(settings);
     }
 
     public void LoadImage(BitmapSource image)
@@ -36,8 +40,18 @@ public partial class MainWindow : Window
         InkLayer.Strokes.Clear();
     }
 
-    public void SetHotkeyStatus(bool registered)
+    public void ApplySettings(AppSettings settings)
     {
+        _settings = settings;
+        AreaHotkeyText.Text = settings.AreaCaptureHotkey;
+        ClipboardStatusText.Text = settings.CopyCapturedImageToClipboard
+            ? "Captured images are copied to clipboard immediately."
+            : "Captured images stay in the editor until copied or saved.";
+    }
+
+    public void SetHotkeyStatus(bool registered, string hotkey)
+    {
+        AreaHotkeyText.Text = hotkey;
         HotkeyStatusText.Text = registered ? "Active" : "Unavailable";
         HotkeyStatusText.Foreground = registered
             ? new SolidColorBrush(WpfColor.FromRgb(56, 217, 150))

@@ -17,13 +17,35 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
 button {
   border: 0;
   cursor: pointer;
+}
+
+.browserFallback {
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  place-items: center;
+  background: #101217;
+  color: #eef2f8;
+  text-align: center;
+}
+
+.browserFallback h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.browserFallback p {
+  margin: 8px 0 0;
+  color: #95a1b2;
 }
 
 .appShell {
@@ -53,14 +75,80 @@ button {
 }
 
 .brandMark {
-  display: grid;
+  position: relative;
   width: 44px;
   height: 44px;
-  place-items: center;
+  flex: 0 0 auto;
   border-radius: 8px;
-  background: #4da3ff;
-  color: #07111f;
-  font-weight: 800;
+  background: #10141c;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.markHook,
+.markTile {
+  position: absolute;
+  display: block;
+}
+
+.markHook {
+  background: linear-gradient(135deg, #ffb703 0%, #ef233c 58%, #2dd4bf 100%);
+}
+
+.markHookTop {
+  top: 9px;
+  left: 10px;
+  width: 24px;
+  height: 7px;
+  border-radius: 5px 5px 2px 2px;
+  box-shadow: 0 7px 0 #ef233c;
+}
+
+.markHookTop::before,
+.markHookBottom::before {
+  position: absolute;
+  content: "";
+  width: 7px;
+  border-radius: 5px;
+  background: inherit;
+}
+
+.markHookTop::before {
+  top: 0;
+  left: 0;
+  height: 20px;
+}
+
+.markHookBottom {
+  right: 9px;
+  bottom: 9px;
+  width: 24px;
+  height: 7px;
+  border-radius: 2px 2px 5px 5px;
+}
+
+.markHookBottom::before {
+  right: 0;
+  bottom: 0;
+  height: 20px;
+}
+
+.markTile {
+  width: 10px;
+  height: 8px;
+  border-radius: 2px;
+  background: #f8fafc;
+}
+
+.markTileRight {
+  top: 18px;
+  right: 10px;
+}
+
+.markTileLeft {
+  left: 13px;
+  bottom: 13px;
 }
 
 .brandBlock h1,
@@ -114,6 +202,44 @@ button {
   flex: 1;
   flex-direction: column;
   gap: 12px;
+}
+
+.settingsPane {
+  display: grid;
+  gap: 10px;
+}
+
+.shortcutRow {
+  display: grid;
+  gap: 6px;
+  color: #c9d3df;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.shortcutRow select {
+  min-width: 0;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: #232a35;
+  color: #f5f7fb;
+  padding: 0 10px;
+}
+
+.shortcutStatus {
+  color: #95a1b2;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.shortcutStatus.active {
+  color: #38d996;
+}
+
+.shortcutStatus.blocked {
+  color: #ffb86b;
 }
 
 .sectionTitle {
@@ -187,6 +313,7 @@ button {
 }
 
 .workspace {
+  display: grid;
   min-width: 0;
   min-height: 0;
 }
@@ -207,23 +334,129 @@ button {
 
 .editorShell {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: 46px minmax(0, 1fr) auto;
   height: 100vh;
+  min-width: 0;
+  min-height: 0;
+  background: #242424;
 }
 
-.toolbar {
+.workspace .editorShell {
+  height: 100%;
+}
+
+.editorTitlebar {
+  display: grid;
+  grid-template-columns: 42px minmax(150px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-bottom: 1px solid #1b1b1b;
+  background: linear-gradient(#303030, #252525);
+}
+
+.editorTitle {
+  justify-self: center;
+  min-width: 0;
+  max-width: 360px;
+  overflow: hidden;
+  border: 1px solid #1d1d1d;
+  border-radius: 6px;
+  background: #25282e;
+  color: #aeb6c2;
+  padding: 4px 18px;
+  font-size: 13px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editorTopActions {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #171a21;
+  justify-content: flex-end;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.titleActionButton {
+  display: inline-flex;
+  min-width: fit-content;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #151515;
+  border-radius: 7px;
+  background: #232a35;
+  color: #eef2f8;
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.copyTitleButton {
+  background: #38d996;
+  color: #07120d;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  border-top: 1px solid #151515;
+  background: linear-gradient(#303030, #252525);
+}
+
+.toolbarTools,
+.toolbarActions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbarTools {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.toolbarActions {
+  justify-content: flex-end;
+}
+
+.bottomToolbar .toolbarActions {
+  display: none;
 }
 
 .iconButton.active {
   background: #4da3ff;
   color: #07111f;
+}
+
+.topIconButton,
+.iconButton,
+.copyButton {
+  border: 1px solid #151515;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.topIconButton {
+  display: inline-grid;
+  width: 34px;
+  height: 26px;
+  place-items: center;
+  border-radius: 5px;
+  background: #272b31;
+  color: #d7dfeb;
 }
 
 .divider {
@@ -271,17 +504,48 @@ button {
   min-height: 0;
   place-items: center;
   overflow: auto;
-  padding: 24px;
-  background: #0d0f14;
+  padding: 10px 52px;
+  background-color: #252525;
+  background-image:
+    linear-gradient(45deg, #2b2b2b 25%, transparent 25%),
+    linear-gradient(-45deg, #2b2b2b 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b2b 75%),
+    linear-gradient(-45deg, transparent 75%, #2b2b2b 75%);
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-size: 16px 16px;
 }
 
 .canvasStage canvas {
   max-width: 100%;
   max-height: 100%;
-  border-radius: 4px;
-  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.45);
+  border: 1px solid #1a1d22;
+  border-radius: 0;
+  box-shadow: 0 16px 46px rgba(0, 0, 0, 0.46);
   background: #fff;
   touch-action: none;
+}
+
+.bottomToolbar .saveButton {
+  min-height: 28px;
+  padding: 0 12px;
+}
+
+.copyButton {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 8px;
+  background: #38d996;
+  color: #07120d;
+  padding: 0 12px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .overlayRoot {
@@ -290,6 +554,7 @@ button {
   overflow: hidden;
   user-select: none;
   cursor: crosshair;
+  background: transparent;
 }
 
 .overlayShot,
@@ -298,21 +563,26 @@ button {
   inset: 0;
   width: 100%;
   height: 100%;
+  pointer-events: none;
 }
 
 .overlayShot {
   object-fit: fill;
+  z-index: 0;
 }
 
 .overlayShade {
-  background: rgba(0, 0, 0, 0.42);
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .selectionRect {
   position: absolute;
+  z-index: 2;
+  pointer-events: none;
   border: 2px solid #4da3ff;
   background: rgba(77, 163, 255, 0.08);
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.22);
 }
 
 .selectionRect span {
@@ -328,6 +598,8 @@ button {
 
 .overlayHint {
   position: fixed;
+  z-index: 3;
+  pointer-events: none;
   left: 50%;
   bottom: 26px;
   transform: translateX(-50%);
@@ -336,6 +608,28 @@ button {
   color: #eef2f8;
   padding: 9px 12px;
   font-size: 13px;
+}
+
+.overlayInfo {
+  position: fixed;
+  z-index: 3;
+  pointer-events: none;
+  left: 10%;
+  top: 18%;
+  display: grid;
+  gap: 4px;
+  max-width: min(560px, 80vw);
+  background: rgba(220, 221, 214, 0.5);
+  color: #15171c;
+  padding: 8px 12px;
+  font-size: 18px;
+  line-height: 1.12;
+  text-shadow: 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.overlayInfo strong,
+.overlayInfo span {
+  display: block;
 }
 
 @media (max-width: 860px) {
@@ -348,7 +642,10 @@ button {
   }
 
   .toolbar {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .toolbarActions {
+    justify-content: flex-start;
   }
 }
-

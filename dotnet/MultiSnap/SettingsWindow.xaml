@@ -1,0 +1,36 @@
+<Window x:Class="MultiSnap.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MultiSnap Settings" Height="330" Width="430" MinHeight="300" MinWidth="400"
+        Background="{StaticResource AppBackgroundBrush}" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Grid Margin="22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal">
+            <Image Source="{StaticResource AppIconImage}" Width="42" Height="42" Margin="0,0,12,0" />
+            <StackPanel>
+                <TextBlock Text="Settings" Foreground="{StaticResource TextPrimaryBrush}" FontSize="24" FontWeight="SemiBold" />
+                <TextBlock Text="MultiSnap capture workflow" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,24,0,0">
+            <TextBlock Text="Area capture hotkey" Foreground="#CBD5E1" Margin="0,0,0,6" />
+            <ComboBox x:Name="AreaHotkeyCombo" Height="34" Margin="0,0,0,18" />
+
+            <CheckBox x:Name="StartMinimizedCheck" Content="Start minimized to tray"
+                      Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14" />
+            <CheckBox x:Name="CopyClipboardCheck" Content="Copy captured image to clipboard"
+                      Foreground="{StaticResource TextPrimaryBrush}" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Width="90" Height="34" Margin="0,0,10,0" Click="Cancel_Click" />
+            <Button Content="Save" Width="90" Height="34" Click="Save_Click" Style="{StaticResource PrimaryButtonStyle}" />
+        </StackPanel>
+    </Grid>
+</Window>
