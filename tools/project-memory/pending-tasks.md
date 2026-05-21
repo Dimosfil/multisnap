@@ -14,6 +14,26 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### Edited Image Copy Alignment
+
+Goal: make copied/saved annotated screenshots match the editor preview without clipping or shifted strokes.
+
+Planned changes:
+
+- [x] Inspect editor canvas coordinate mapping and export rendering.
+- [x] Reuse one render path for preview, copy, and save.
+- [x] Verify project checks.
+
+### Title Bar Action Button Visibility
+
+Goal: make the title bar actions readable on the dark editor header.
+
+Planned changes:
+
+- [x] Inspect the title bar button markup and CSS.
+- [x] Adjust button styling so labels and icons have sufficient contrast.
+- [x] Verify renderer checks.
+
 ### Auto-Bump Installer Version On Source Changes
 
 Goal: make installer builds create a new patch version only when relevant project inputs changed since the last successful installer build.

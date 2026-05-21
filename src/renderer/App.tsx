@@ -411,15 +411,9 @@ function Editor({
   const draw = () => {
     const canvas = canvasRef.current;
     const base = baseImageRef.current;
-    if (!canvas || !base) return;
+    if (!canvas || !base) return false;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    canvas.width = base.naturalWidth;
-    canvas.height = base.naturalHeight;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(base, 0, 0);
-    [...strokes, draft].filter(Boolean).forEach((stroke) => renderStroke(ctx, stroke as Stroke));
+    return renderEditedImage(canvas, base, visibleStrokes());
   };
 
   useEffect(() => {
@@ -431,7 +425,9 @@ function Editor({
     img.src = image;
   }, [image]);
 
-  useEffect(draw, [strokes, draft]);
+  useEffect(() => {
+    void draw();
+  }, [strokes, draft]);
 
   useEffect(() => {
     return () => {
@@ -443,7 +439,7 @@ function Editor({
 
   const canvasPoint = (event: React.PointerEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current!;
-    const box = canvas.getBoundingClientRect();
+    const box = getCanvasContentBox(canvas);
     return {
       x: ((event.clientX - box.left) / box.width) * canvas.width,
       y: ((event.clientY - box.top) / box.height) * canvas.height
@@ -451,19 +447,17 @@ function Editor({
   };
 
   const exportImage = () => {
+    const canvas = canvasRef.current;
     const base = baseImageRef.current;
-    if (!base) return canvasRef.current?.toDataURL("image/png") ?? image;
+    if (canvas && base && draw()) return canvas.toDataURL("image/png");
+    if (!base) return canvas?.toDataURL("image/png") ?? image;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = base.naturalWidth;
-    canvas.height = base.naturalHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return image;
-
-    ctx.drawImage(base, 0, 0);
-    [...strokes, draft].filter(Boolean).forEach((stroke) => renderStroke(ctx, stroke as Stroke));
-    return canvas.toDataURL("image/png");
+    const exportCanvas = document.createElement("canvas");
+    if (!renderEditedImage(exportCanvas, base, visibleStrokes())) return image;
+    return exportCanvas.toDataURL("image/png");
   };
+
+  const visibleStrokes = () => [...strokes, draft].filter((stroke): stroke is Stroke => Boolean(stroke));
 
   const copyEditedImage = async () => {
     await window.multisnap.copyImage(exportImage());
@@ -607,6 +601,33 @@ function ToolButton({
       {children}
     </button>
   );
+}
+
+function getCanvasContentBox(canvas: HTMLCanvasElement) {
+  const box = canvas.getBoundingClientRect();
+  const styles = window.getComputedStyle(canvas);
+  const borderLeft = Number.parseFloat(styles.borderLeftWidth) || 0;
+  const borderRight = Number.parseFloat(styles.borderRightWidth) || 0;
+  const borderTop = Number.parseFloat(styles.borderTopWidth) || 0;
+  const borderBottom = Number.parseFloat(styles.borderBottomWidth) || 0;
+  return {
+    left: box.left + borderLeft,
+    top: box.top + borderTop,
+    width: Math.max(1, box.width - borderLeft - borderRight),
+    height: Math.max(1, box.height - borderTop - borderBottom)
+  };
+}
+
+function renderEditedImage(canvas: HTMLCanvasElement, base: HTMLImageElement, strokes: Stroke[]) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return false;
+
+  canvas.width = base.naturalWidth;
+  canvas.height = base.naturalHeight;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(base, 0, 0, canvas.width, canvas.height);
+  strokes.forEach((stroke) => renderStroke(ctx, stroke));
+  return true;
 }
 
 function renderStroke(ctx: CanvasRenderingContext2D, stroke: Stroke) {
