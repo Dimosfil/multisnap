@@ -13,3 +13,5 @@ tools/project-memory/*.sqlite-*
 tools/project-memory/*.db
 tools/project-memory/*.db-*
 tools/summary/*.tmp
+artifacts/dotnet-version-state.json
+artifacts/dotnet-version-pending.json

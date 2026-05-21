@@ -1,0 +1,25 @@
+<Project>
+  <Target Name="MultiSnapEvaluateVersion"
+          BeforeTargets="GenerateAssemblyInfo"
+          Condition="'$(MSBuildProjectName)' == 'MultiSnap' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\bump-dotnet-version-if-changed.ps1&quot; -Mode Evaluate -ProjectRoot &quot;$(MSBuildThisFileDirectory)..&quot;"
+          ConsoleToMsBuild="true"
+          StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="MultiSnapAutoVersion" />
+    </Exec>
+    <PropertyGroup Condition="'$(MultiSnapAutoVersion)' != ''">
+      <Version>$(MultiSnapAutoVersion)</Version>
+      <AssemblyVersion>$(MultiSnapAutoVersion).0</AssemblyVersion>
+      <FileVersion>$(MultiSnapAutoVersion).0</FileVersion>
+      <InformationalVersion>$(MultiSnapAutoVersion)</InformationalVersion>
+    </PropertyGroup>
+    <Message Text="MultiSnap build version $(Version)" Importance="high" />
+  </Target>
+
+  <Target Name="MultiSnapCommitVersionState"
+          AfterTargets="Build"
+          Condition="'$(MSBuildProjectName)' == 'MultiSnap' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\bump-dotnet-version-if-changed.ps1&quot; -Mode Commit -ProjectRoot &quot;$(MSBuildThisFileDirectory)..&quot;"
+          StandardOutputImportance="Low" />
+  </Target>
+</Project>

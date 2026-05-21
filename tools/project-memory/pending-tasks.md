@@ -14,6 +14,37 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### Auto-Bump Installer Version On Source Changes
+
+Goal: make installer builds create a new patch version only when relevant project inputs changed since the last successful installer build.
+
+Planned changes:
+
+- [x] Define a source fingerprint that excludes generated build output and local logs.
+- [x] Sync bumped versions across `package.json`, `package-lock.json`, `.csproj`, and Inno metadata.
+- [x] Store the last successful C# build fingerprint.
+- [x] Verify the C# build uses the computed version and creates a baseline fingerprint.
+
+### Cancel Area Selection On Right Click
+
+Goal: reset the in-progress capture selection when right-click is pressed while left mouse is held.
+
+Planned changes:
+
+- [x] Inspect capture overlay mouse handling.
+- [x] Reset active selection on right-click during drag.
+- [x] Verify TypeScript checks.
+
+### Current Installer Build
+
+Goal: produce the Windows installer for the current MultiSnap 0.1.0 build.
+
+Execution order:
+
+- [x] Confirm project-local version and installer script.
+- [x] Run the installer build script.
+- [x] Verify the generated setup artifact.
+
 ### Editor Clipboard Button Visibility
 
 Goal: make the editor copy-to-clipboard action visible and reachable in the current app layout.

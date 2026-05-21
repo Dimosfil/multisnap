@@ -319,10 +319,20 @@ function OverlayCapture() {
     await window.multisnap.submitCapture(canvas.toDataURL("image/png"));
   };
 
+  const resetSelection = () => {
+    setStart(null);
+    setCurrent(null);
+  };
+
   return (
     <div
       className="overlayRoot"
       onMouseDown={(event) => {
+        if (event.button !== 0) {
+          event.preventDefault();
+          resetSelection();
+          return;
+        }
         setStart({ x: event.clientX, y: event.clientY });
         setCurrent({ x: event.clientX, y: event.clientY });
       }}
@@ -340,7 +350,14 @@ function OverlayCapture() {
           y: start.y + Math.sign(deltaY || 1) * side
         });
       }}
-      onMouseUp={() => void cropSelection()}
+      onMouseUp={(event) => {
+        if (event.button !== 0) return;
+        void cropSelection();
+      }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        resetSelection();
+      }}
     >
       {screenshot && (
         <>
