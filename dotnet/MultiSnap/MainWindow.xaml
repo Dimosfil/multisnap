@@ -50,14 +50,24 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <ToolBarTray Background="#121722">
-                <ToolBar Background="#121722" Foreground="{StaticResource TextPrimaryBrush}">
-                    <Button Content="Copy" Click="Copy_Click" />
-                    <Button Content="Save PNG" Click="Save_Click" />
-                    <Separator />
-                    <Button Content="Clear Ink" Click="ClearInk_Click" />
-                </ToolBar>
-            </ToolBarTray>
+            <Border Background="#121722" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,0,0,1" Padding="8,7">
+                <Border.Resources>
+                    <Style x:Key="EditorToolbarButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="MinHeight" Value="30" />
+                        <Setter Property="Margin" Value="0,0,8,0" />
+                        <Setter Property="Padding" Value="13,6" />
+                        <Setter Property="Background" Value="#2B3446" />
+                        <Setter Property="BorderBrush" Value="#526074" />
+                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                    </Style>
+                </Border.Resources>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Copy" Click="Copy_Click" Style="{StaticResource EditorToolbarButtonStyle}" Foreground="{StaticResource TextPrimaryBrush}" />
+                    <Button Content="Save PNG" Click="Save_Click" Style="{StaticResource EditorToolbarButtonStyle}" Foreground="{StaticResource TextPrimaryBrush}" />
+                    <Border Width="1" Height="26" Background="{StaticResource StrokeBrush}" Margin="2,0,10,0" />
+                    <Button Content="Clear Ink" Click="ClearInk_Click" Style="{StaticResource EditorToolbarButtonStyle}" Foreground="{StaticResource TextPrimaryBrush}" />
+                </StackPanel>
+            </Border>
 
             <Border Grid.Row="1" Margin="22" Background="{StaticResource SurfaceBackgroundBrush}" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1" CornerRadius="8">
                 <Grid x:Name="EditorSurface" ClipToBounds="True">

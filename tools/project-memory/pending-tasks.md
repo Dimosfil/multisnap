@@ -14,6 +14,16 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### Editor Toolbar Button Contrast Regression
+
+Goal: make the editor toolbar actions readable against the dark header again.
+
+Planned changes:
+
+- [x] Locate the toolbar markup and CSS for Copy / Save PNG / Clear Ink.
+- [x] Increase button contrast and preserve compact toolbar layout.
+- [x] Verify WPF build.
+
 ### Edited Image Copy Alignment
 
 Goal: make copied/saved annotated screenshots match the editor preview without clipping or shifted strokes.
