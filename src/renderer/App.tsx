@@ -272,6 +272,7 @@ function OverlayCapture() {
   const [start, setStart] = useState<Point | null>(null);
   const [current, setCurrent] = useState<Point | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const selectionCanceledRef = useRef(false);
 
   useEffect(() => {
     window.multisnap.captureScreen().then(setScreenshot).catch(() => window.multisnap.hideOverlay());
@@ -320,9 +321,20 @@ function OverlayCapture() {
   };
 
   const resetSelection = () => {
+    selectionCanceledRef.current = true;
     setStart(null);
     setCurrent(null);
   };
+
+  useEffect(() => {
+    const onMouseDown = (event: MouseEvent) => {
+      if (event.button !== 2) return;
+      event.preventDefault();
+      resetSelection();
+    };
+    window.addEventListener("mousedown", onMouseDown, true);
+    return () => window.removeEventListener("mousedown", onMouseDown, true);
+  }, []);
 
   return (
     <div
@@ -333,11 +345,17 @@ function OverlayCapture() {
           resetSelection();
           return;
         }
+        selectionCanceledRef.current = false;
         setStart({ x: event.clientX, y: event.clientY });
         setCurrent({ x: event.clientX, y: event.clientY });
       }}
       onMouseMove={(event) => {
         if (!start) return;
+        if ((event.buttons & 2) !== 0) {
+          event.preventDefault();
+          resetSelection();
+          return;
+        }
         if (!event.shiftKey) {
           setCurrent({ x: event.clientX, y: event.clientY });
           return;
@@ -352,6 +370,14 @@ function OverlayCapture() {
       }}
       onMouseUp={(event) => {
         if (event.button !== 0) return;
+        if (selectionCanceledRef.current) {
+          selectionCanceledRef.current = false;
+          return;
+        }
+        if (!rect || rect.width < 8 || rect.height < 8) {
+          resetSelection();
+          return;
+        }
         void cropSelection();
       }}
       onContextMenu={(event) => {

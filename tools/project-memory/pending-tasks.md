@@ -14,6 +14,43 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### Screen Recording .NET Sprint 1
+
+Goal: start the screen recording feature as .NET-only work and seed settings with Ctrl+Shift+PrintScreen for video recording mode.
+
+Planned changes:
+
+- [x] Capture the .NET-only recording architecture decision.
+- [x] Add recording settings defaults, including Ctrl+Shift+PrintScreen.
+- [x] Add a recording state-machine/service skeleton.
+- [x] Wire video hotkey registration to a safe placeholder flow.
+- [x] Add WPF overlay mode for video-area selection.
+- [x] Replace the modal recording placeholder with a floating Stop/Cancel controller.
+- [x] Open a recording result window after Stop with preview and file actions.
+- [x] Verify the .NET build.
+
+### WPF Overlay Right-Click Cancel
+
+Goal: make right-click close/cancel the .NET capture overlay immediately, including before any selection starts.
+
+Planned changes:
+
+- [x] Inspect WPF overlay mouse handlers.
+- [x] Add right-click cancellation at the overlay root.
+- [x] Verify .NET build.
+- [x] Restart the WPF app.
+
+### Capture Overlay Selection Reset
+
+Goal: make mouse cancellation reset the active capture area selection reliably.
+
+Planned changes:
+
+- [x] Locate current overlay pointer/mouse handling.
+- [x] Handle right-click cancellation for the active selection state.
+- [x] Reset a short left-click selection instead of leaving an empty rectangle.
+- [x] Verify TypeScript checks.
+
 ### Editor Toolbar Button Contrast Regression
 
 Goal: make the editor toolbar actions readable against the dark header again.
@@ -196,6 +233,22 @@ Execution order:
 - [ ] TODO
 
 Risks or dependencies:
+
+### .NET Video Recording Fix
+
+Goal: make the WPF screen recording flow produce a playable video file and expose preview controls in the result window.
+
+Planned changes:
+
+- [x] Replace the recording placeholder with a real Windows recording backend.
+- [x] Add explicit player controls to the recording result window.
+- [x] Verify the .NET build and update notes with any runtime caveats.
+
+Verification:
+
+- [x] dotnet build dotnet\MultiSnap\MultiSnap.csproj.
+
+Runtime note: recording now uses ScreenRecorderLib/Media Foundation and the WPF host builds x64 so the native recorder assembly is selected.
 
 - [ ] TODO
 

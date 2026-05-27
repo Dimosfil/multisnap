@@ -14,25 +14,35 @@ public partial class OverlayWindow : Window
 {
     private readonly BitmapSource _screenshot;
     private readonly ScreenCaptureService _capture;
+    private readonly OverlayMode _mode;
+    private readonly System.Drawing.Rectangle _screenBounds;
+    private readonly string _screenDeviceName;
     private WpfPoint? _startPoint;
 
-    public OverlayWindow(BitmapSource screenshot, ScreenCaptureService capture)
+    public OverlayWindow(BitmapSource screenshot, ScreenCaptureService capture, OverlayMode mode = OverlayMode.ScreenshotCapture)
     {
         _screenshot = screenshot;
         _capture = capture;
+        _mode = mode;
         InitializeComponent();
 
         var screen = Forms.Screen.FromPoint(Forms.Cursor.Position);
-        Left = screen.Bounds.Left;
-        Top = screen.Bounds.Top;
-        Width = screen.Bounds.Width;
-        Height = screen.Bounds.Height;
+        _screenBounds = screen.Bounds;
+        _screenDeviceName = screen.DeviceName;
+        Left = _screenBounds.Left;
+        Top = _screenBounds.Top;
+        Width = _screenBounds.Width;
+        Height = _screenBounds.Height;
         ScreenshotImage.Source = screenshot;
+        InstructionText.Text = mode == OverlayMode.ScreenRecording
+            ? "Select video recording area"
+            : "Select capture area";
         Focusable = true;
         Loaded += (_, _) => Focus();
     }
 
     public BitmapSource? CapturedImage { get; private set; }
+    public ScreenRecordingRegion? SelectedRecordingRegion { get; private set; }
 
     private void Overlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -71,24 +81,53 @@ public partial class OverlayWindow : Window
 
         var scaleX = _screenshot.PixelWidth / Math.Max(1, ActualWidth);
         var scaleY = _screenshot.PixelHeight / Math.Max(1, ActualHeight);
-        CapturedImage = _capture.Crop(
-            _screenshot,
-            new Int32Rect(
-                (int)Math.Round(selection.X * scaleX),
-                (int)Math.Round(selection.Y * scaleY),
-                (int)Math.Round(selection.Width * scaleX),
-                (int)Math.Round(selection.Height * scaleY)));
+        var crop = new Int32Rect(
+            (int)Math.Round(selection.X * scaleX),
+            (int)Math.Round(selection.Y * scaleY),
+            (int)Math.Round(selection.Width * scaleX),
+            (int)Math.Round(selection.Height * scaleY));
+
+        if (_mode == OverlayMode.ScreenRecording)
+        {
+            SelectedRecordingRegion = new ScreenRecordingRegion(
+                _screenBounds.Left + crop.X,
+                _screenBounds.Top + crop.Y,
+                crop.Width,
+                crop.Height,
+                _screenDeviceName,
+                _screenBounds.Left,
+                _screenBounds.Top);
+        }
+        else
+        {
+            CapturedImage = _capture.Crop(_screenshot, crop);
+        }
+
         DialogResult = true;
         Close();
+    }
+
+    private void Overlay_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+        CancelCapture();
     }
 
     private void Overlay_KeyDown(object sender, WpfKeyEventArgs e)
     {
         if (e.Key == Key.Escape)
         {
-            DialogResult = false;
-            Close();
+            CancelCapture();
         }
+    }
+
+    private void CancelCapture()
+    {
+        Mouse.Capture(null);
+        _startPoint = null;
+        SelectionRect.Visibility = Visibility.Collapsed;
+        DialogResult = false;
+        Close();
     }
 
     private void UpdateSelection(WpfPoint start, WpfPoint end)
@@ -108,4 +147,10 @@ public partial class OverlayWindow : Window
             Math.Abs(start.X - end.X),
             Math.Abs(start.Y - end.Y));
     }
+}
+
+public enum OverlayMode
+{
+    ScreenshotCapture,
+    ScreenRecording
 }

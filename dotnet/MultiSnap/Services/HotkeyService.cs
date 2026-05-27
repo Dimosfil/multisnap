@@ -7,18 +7,21 @@ namespace MultiSnap.Services;
 public sealed class HotkeyService : IDisposable
 {
     private const int WmHotkey = 0x0312;
-    private const int HotkeyId = 0x4d53;
+    private const int AreaHotkeyId = 0x4d53;
+    private const int VideoHotkeyId = 0x4d54;
     private const uint ModAlt = 0x0001;
     private const uint ModControl = 0x0002;
     private const uint ModShift = 0x0004;
     private const uint VkSnapshot = 0x2C;
 
     private HwndSource? _source;
-    private bool _registered;
+    private bool _areaRegistered;
+    private bool _videoRegistered;
 
     public event EventHandler? AreaCaptureRequested;
+    public event EventHandler? VideoRecordingRequested;
 
-    public bool Register(WindowInteropHelper helper, AppSettings settings)
+    public HotkeyRegistrationResult Register(WindowInteropHelper helper, AppSettings settings)
     {
         var handle = helper.Handle;
         if (_source is null)
@@ -29,9 +32,11 @@ public sealed class HotkeyService : IDisposable
 
         UnregisterCurrent();
 
-        var hotkey = ParseHotkey(settings.AreaCaptureHotkey);
-        _registered = RegisterHotKey(handle, HotkeyId, hotkey.Modifiers, hotkey.Key);
-        return _registered;
+        var areaHotkey = ParseHotkey(AppSettingsContract.NormalizeAreaCaptureHotkey(settings.AreaCaptureHotkey));
+        var videoHotkey = ParseHotkey(AppSettingsContract.NormalizeVideoRecordingHotkey(settings.VideoRecordingHotkey));
+        _areaRegistered = RegisterHotKey(handle, AreaHotkeyId, areaHotkey.Modifiers, areaHotkey.Key);
+        _videoRegistered = RegisterHotKey(handle, VideoHotkeyId, videoHotkey.Modifiers, videoHotkey.Key);
+        return new HotkeyRegistrationResult(_areaRegistered, _videoRegistered);
     }
 
     public void Dispose()
@@ -48,10 +53,21 @@ public sealed class HotkeyService : IDisposable
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == WmHotkey && wParam.ToInt32() == HotkeyId)
+        if (msg != WmHotkey)
         {
-            AreaCaptureRequested?.Invoke(this, EventArgs.Empty);
-            handled = true;
+            return IntPtr.Zero;
+        }
+
+        switch (wParam.ToInt32())
+        {
+            case AreaHotkeyId:
+                AreaCaptureRequested?.Invoke(this, EventArgs.Empty);
+                handled = true;
+                break;
+            case VideoHotkeyId:
+                VideoRecordingRequested?.Invoke(this, EventArgs.Empty);
+                handled = true;
+                break;
         }
 
         return IntPtr.Zero;
@@ -59,21 +75,34 @@ public sealed class HotkeyService : IDisposable
 
     private void UnregisterCurrent()
     {
-        if (_source is not null && _registered)
+        if (_source is null)
         {
-            UnregisterHotKey(_source.Handle, HotkeyId);
+            return;
         }
 
-        _registered = false;
+        if (_areaRegistered)
+        {
+            UnregisterHotKey(_source.Handle, AreaHotkeyId);
+        }
+
+        if (_videoRegistered)
+        {
+            UnregisterHotKey(_source.Handle, VideoHotkeyId);
+        }
+
+        _areaRegistered = false;
+        _videoRegistered = false;
     }
 
     private static (uint Modifiers, uint Key) ParseHotkey(string hotkey)
     {
-        return AppSettingsContract.NormalizeAreaCaptureHotkey(hotkey) switch
+        return hotkey switch
         {
             "PrintScreen" => (0, VkSnapshot),
             "Alt+PrintScreen" => (ModAlt, VkSnapshot),
             "Shift+PrintScreen" => (ModShift, VkSnapshot),
+            "Ctrl+Shift+PrintScreen" => (ModControl | ModShift, VkSnapshot),
+            "Ctrl+Alt+PrintScreen" => (ModControl | ModAlt, VkSnapshot),
             _ => (ModControl, VkSnapshot)
         };
     }
@@ -84,3 +113,5 @@ public sealed class HotkeyService : IDisposable
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 }
+
+public sealed record HotkeyRegistrationResult(bool AreaCaptureRegistered, bool VideoRecordingRegistered);

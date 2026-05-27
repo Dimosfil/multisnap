@@ -17,9 +17,12 @@ public partial class App : Application
     private readonly SettingsService _settings = new();
     private readonly ScreenCaptureService _capture = new();
     private readonly HotkeyService _hotkeys = new();
+    private readonly RecordingService _recording = new();
     private AppSettings _currentSettings = new();
     private NotifyIcon? _tray;
     private MainWindow? _mainWindow;
+    private RecordingControllerWindow? _recordingController;
+    private RecordingResultWindow? _recordingResultWindow;
     private bool _isQuitting;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -34,9 +37,14 @@ public partial class App : Application
         _mainWindow.SourceInitialized += (_, _) =>
         {
             var registered = RegisterHotkey();
-            if (!registered)
+            if (!registered.AreaCaptureRegistered)
             {
                 Log.Warning("{Hotkey} hotkey registration failed.", _currentSettings.AreaCaptureHotkey);
+            }
+
+            if (!registered.VideoRecordingRegistered)
+            {
+                Log.Warning("{Hotkey} hotkey registration failed.", _currentSettings.VideoRecordingHotkey);
             }
         };
         _mainWindow.Closing += (_, args) =>
@@ -51,6 +59,8 @@ public partial class App : Application
         };
 
         _hotkeys.AreaCaptureRequested += (_, _) => Dispatcher.Invoke(StartAreaCapture);
+        _hotkeys.VideoRecordingRequested += (_, _) => Dispatcher.Invoke(StartVideoRecording);
+        _recording.StatusChanged += (_, args) => Log.Information("Recording status: {Status}", args.Message);
         CreateTray();
         if (!_currentSettings.StartMinimizedToTray)
         {
@@ -94,6 +104,7 @@ public partial class App : Application
 
         _tray.ContextMenuStrip.Items.Add("Capture area", null, (_, _) => StartAreaCapture());
         _tray.ContextMenuStrip.Items.Add("Capture full screen", null, (_, _) => CaptureFullScreen());
+        _tray.ContextMenuStrip.Items.Add("Record video area", null, (_, _) => StartVideoRecording());
         _tray.ContextMenuStrip.Items.Add("Settings...", null, (_, _) => ShowSettingsWindow());
         _tray.ContextMenuStrip.Items.Add("Show MultiSnap", null, (_, _) => ShowMainWindow());
         _tray.ContextMenuStrip.Items.Add(new ToolStripSeparator());
@@ -137,6 +148,62 @@ public partial class App : Application
         _currentSettings = _settings.Save(window.Settings);
         _mainWindow.ApplySettings(_currentSettings);
         RegisterHotkey();
+    }
+
+    private async void StartVideoRecording()
+    {
+        try
+        {
+            var screenshot = _capture.CaptureCursorDisplay();
+            var overlay = new OverlayWindow(screenshot, _capture, OverlayMode.ScreenRecording);
+            if (_mainWindow?.IsVisible == true)
+            {
+                overlay.Owner = _mainWindow;
+            }
+
+            if (overlay.ShowDialog() != true || overlay.SelectedRecordingRegion is not { } region)
+            {
+                return;
+            }
+
+            await _recording.StartRegionRecordingAsync(region);
+            ShowRecordingController();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Video recording start failed.");
+            MessageBox.Show("Video recording failed. See the local log for details.", "MultiSnap");
+        }
+    }
+
+    private void ShowRecordingController()
+    {
+        _recordingController?.Close();
+        _recordingController = new RecordingControllerWindow(
+            StopRecordingAndShowResultAsync,
+            async () => await _recording.CancelAsync());
+        _recordingController.Closed += (_, _) => _recordingController = null;
+        _recordingController.Show();
+    }
+
+    private async Task StopRecordingAndShowResultAsync()
+    {
+        var result = await _recording.StopAsync();
+        ShowRecordingResult(result);
+    }
+
+    private void ShowRecordingResult(RecordingResult? result)
+    {
+        _recordingResultWindow?.Close();
+        _recordingResultWindow = new RecordingResultWindow(result);
+        if (_mainWindow is not null)
+        {
+            _recordingResultWindow.Owner = _mainWindow;
+        }
+
+        _recordingResultWindow.Closed += (_, _) => _recordingResultWindow = null;
+        _recordingResultWindow.Show();
+        _recordingResultWindow.Activate();
     }
 
     private void StartAreaCapture()
@@ -186,16 +253,19 @@ public partial class App : Application
         _mainWindow?.LoadImage(image);
     }
 
-    private bool RegisterHotkey()
+    private HotkeyRegistrationResult RegisterHotkey()
     {
         if (_mainWindow is null)
         {
-            return false;
+            return new HotkeyRegistrationResult(false, false);
         }
 
         var helper = new System.Windows.Interop.WindowInteropHelper(_mainWindow);
         var registered = _hotkeys.Register(helper, _currentSettings);
-        _mainWindow.SetHotkeyStatus(registered, _currentSettings.AreaCaptureHotkey);
+        _mainWindow.SetHotkeyStatus(
+            registered,
+            _currentSettings.AreaCaptureHotkey,
+            _currentSettings.VideoRecordingHotkey);
         return registered;
     }
 

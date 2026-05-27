@@ -3,13 +3,21 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True"
         Background="Transparent" Topmost="True" ShowInTaskbar="False"
-        Cursor="Cross" WindowStartupLocation="Manual">
+        Cursor="Cross" WindowStartupLocation="Manual"
+        PreviewMouseRightButtonDown="Overlay_MouseRightButtonDown">
     <Grid MouseLeftButtonDown="Overlay_MouseLeftButtonDown"
           MouseMove="Overlay_MouseMove"
           MouseLeftButtonUp="Overlay_MouseLeftButtonUp"
+          MouseRightButtonDown="Overlay_MouseRightButtonDown"
           KeyDown="Overlay_KeyDown">
         <Image x:Name="ScreenshotImage" Stretch="Fill" />
         <Rectangle Fill="#44000000" />
+        <Border HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,34,0,0"
+                Background="#CC10141C" BorderBrush="#55FFFFFF" BorderThickness="1"
+                CornerRadius="7" Padding="14,8">
+            <TextBlock x:Name="InstructionText" Text="Select capture area"
+                       Foreground="White" FontWeight="SemiBold" />
+        </Border>
         <Canvas x:Name="SelectionCanvas" Background="Transparent">
             <Rectangle x:Name="SelectionRect" Stroke="#ef1f2d" StrokeThickness="2"
                        Fill="#22ef1f2d" Visibility="Collapsed" />

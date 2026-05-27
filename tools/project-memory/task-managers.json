@@ -3,10 +3,10 @@
   "managers": [
     {
       "id": "worknest",
-      "enabled": false,
+      "enabled": true,
       "service_id": "worknest",
-      "workspace": "TODO",
-      "project": "TODO",
+      "workspace": "D:/AI/multisnap",
+      "project": "multisnap",
       "intake_mode": "raw",
       "notes": "Store only the selected manager name/service_id and non-secret project preferences here. Resolve runtime URLs through GI config-service."
     }

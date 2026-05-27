@@ -30,6 +30,8 @@
                         <StackPanel>
                             <TextBlock Text="Area capture hotkey" Foreground="#CBD5E1" />
                             <TextBlock x:Name="AreaHotkeyText" Text="Ctrl+PrintScreen" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,4,0,0" />
+                            <TextBlock Text="Video recording hotkey" Foreground="#CBD5E1" Margin="0,12,0,0" />
+                            <TextBlock x:Name="VideoHotkeyText" Text="Ctrl+Shift+PrintScreen" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,4,0,0" />
                             <Border Background="#10141C" CornerRadius="6" Padding="8,5" HorizontalAlignment="Left" Margin="0,9,0,0">
                                 <TextBlock x:Name="HotkeyStatusText" Text="Checking..." Foreground="{StaticResource AccentWarmBrush}" FontWeight="SemiBold" />
                             </Border>

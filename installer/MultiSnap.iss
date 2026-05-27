@@ -1,5 +1,5 @@
 #define MyAppName "MultiSnap"
-#define MyAppVersion "0.1.2"
+#define MyAppVersion "0.1.13"
 #define MyAppPublisher "MultiSnap"
 #define MyAppExeName "MultiSnap.exe"
 #define MyPublishDir "..\dotnet\MultiSnap\bin\Release\net8.0-windows\win-x64\publish"

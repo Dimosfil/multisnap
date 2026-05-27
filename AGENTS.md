@@ -65,6 +65,14 @@ available, use a local intake folder such as `tools/instruction-updates/` or
 `tools/project-memory/instruction-updates/`. Treat recommendations as intake,
 not accepted rules.
 
+Treat recommendation source projects and owners as provenance only. Reading a
+recommendation in this repository's `updates/` folder is allowed during
+`general-instructions` maintenance, but evidence paths, project names,
+task-manager notes, product plans, or owner labels in that recommendation are
+not permission to read, search, edit, or inspect the source project. Ask the
+user or that project's owner for an explicit concrete path and action before
+crossing the repository boundary.
+
 Use this project as an experience source for `gi`: capture reusable workflows,
 failure patterns, token-saving tactics, and agent-instruction improvements that
 could help other projects. Keep recommendations concise, evidence-backed, and
@@ -168,6 +176,31 @@ Get-Content .\*.log -Tail 120
   If the entity is still missing, ask the user a short clarification question.
   Do not use another project folder or the shared instruction library as a
   runtime fallback unless the user explicitly gives that path and action.
+- Prefer one language command with three ordered choices when the user wants
+  language preferences for project work. Treat `gi language`, `gi язык`,
+  `ги язык`, `gi project language`, `gi проект язык`, `ги проект язык`,
+  `gi язык проекта`, and `ги язык проекта` as requests to configure, in order:
+  project working environment languages, commit-message languages, and task
+  languages in `tools/project-memory/system-preferences.json` and
+  `tools/project-memory/git-preferences.json`.
+- Apply the configured project working-environment language order to plans,
+  checklists, progress updates, final answers, clarifying questions, and
+  user-facing explanations. Do not use it to rewrite existing task text, code,
+  commands, logs, quoted text, or a response language the user explicitly
+  requested for a specific message.
+- Apply the configured task language order to agent-created task titles, task
+  descriptions, and task-manager updates.
+- For each `gi язык` choice, preserve the user's selected order. The first
+  selected language in each choice is primary for that surface.
+- If `gi язык` or an equivalent unified project-language command is sent
+  without explicit languages, run a three-step chat flow instead of asking for
+  one free-form line. At each step, show the same numbered Markdown checklist of
+  available languages with the current selection checked, name the current
+  surface, and tell the user they may reply with numbers or language names.
+- When the user replies to that flow with a numeric-only answer such as `1 2`,
+  interpret the numbers against the most recent language checklist and apply the
+  resulting ordered languages to the current step. Do not ask which languages the
+  numbers mean when the checklist was just shown.
 - Do not commit secrets, credentials, local databases, logs, or generated caches.
 - Do not print full `git diff` output by default. Prefer `git diff --stat` and
   targeted queries for relevant files or patterns.
@@ -206,7 +239,8 @@ Get-Content .\*.log -Tail 120
   before editing files, unless the user explicitly says to fix it, such as
   `fix`, `почини`, or `gi почини`.
 - Keep commit-message language preferences separate from the agent's
-  user-facing working language.
+  user-facing working language unless the user uses the unified project-language
+  command.
 - Treat `gi commit language`, `gi коммит язык`, `ги коммит язык`, and older
   `gi язык коммита` forms as requests to configure commit-message languages in
   `tools/project-memory/git-preferences.json`.
@@ -214,9 +248,10 @@ Get-Content .\*.log -Tail 120
   requests to configure the agent's project working language in
   `tools/project-memory/system-preferences.json`.
 - Follow `tools/project-memory/system-preferences.json` for progress updates,
-  final answers, clarifying questions, and user-facing explanations. Do not use
-  it to rewrite code, commands, logs, quoted text, or a response language the
-  user explicitly requested for a specific message.
+  final answers, clarifying questions, user-facing explanations, and
+  agent-created task artifacts. Do not use it to rewrite existing task text,
+  code, commands, logs, quoted text, or a response language the user explicitly
+  requested for a specific message.
 - Launch applications in the background so focus does not jump away from the
   user's current window.
 - After implementing a frontend, backend, API, or full-stack feature, restart

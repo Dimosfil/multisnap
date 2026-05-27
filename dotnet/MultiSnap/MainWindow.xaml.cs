@@ -44,16 +44,20 @@ public partial class MainWindow : Window
     {
         _settings = settings;
         AreaHotkeyText.Text = settings.AreaCaptureHotkey;
+        VideoHotkeyText.Text = settings.VideoRecordingHotkey;
         ClipboardStatusText.Text = settings.CopyCapturedImageToClipboard
             ? "Captured images are copied to clipboard immediately."
             : "Captured images stay in the editor until copied or saved.";
     }
 
-    public void SetHotkeyStatus(bool registered, string hotkey)
+    public void SetHotkeyStatus(HotkeyRegistrationResult registered, string areaHotkey, string videoHotkey)
     {
-        AreaHotkeyText.Text = hotkey;
-        HotkeyStatusText.Text = registered ? "Active" : "Unavailable";
-        HotkeyStatusText.Foreground = registered
+        AreaHotkeyText.Text = areaHotkey;
+        VideoHotkeyText.Text = videoHotkey;
+        HotkeyStatusText.Text = registered is { AreaCaptureRegistered: true, VideoRecordingRegistered: true }
+            ? "Active"
+            : "Partially unavailable";
+        HotkeyStatusText.Foreground = registered is { AreaCaptureRegistered: true, VideoRecordingRegistered: true }
             ? new SolidColorBrush(WpfColor.FromRgb(56, 217, 150))
             : new SolidColorBrush(WpfColor.FromRgb(255, 104, 104));
     }

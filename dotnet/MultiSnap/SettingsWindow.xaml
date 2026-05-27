@@ -1,7 +1,7 @@
 <Window x:Class="MultiSnap.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MultiSnap Settings" Height="330" Width="430" MinHeight="300" MinWidth="400"
+        Title="MultiSnap Settings" Height="392" Width="430" MinHeight="360" MinWidth="400"
         Background="{StaticResource AppBackgroundBrush}" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Grid Margin="22">
         <Grid.RowDefinitions>
@@ -20,7 +20,10 @@
 
         <StackPanel Grid.Row="1" Margin="0,24,0,0">
             <TextBlock Text="Area capture hotkey" Foreground="#CBD5E1" Margin="0,0,0,6" />
-            <ComboBox x:Name="AreaHotkeyCombo" Height="34" Margin="0,0,0,18" />
+            <ComboBox x:Name="AreaHotkeyCombo" Height="34" Margin="0,0,0,14" />
+
+            <TextBlock Text="Video recording hotkey" Foreground="#CBD5E1" Margin="0,0,0,6" />
+            <ComboBox x:Name="VideoHotkeyCombo" Height="34" Margin="0,0,0,18" />
 
             <CheckBox x:Name="StartMinimizedCheck" Content="Start minimized to tray"
                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14" />

@@ -1,26 +1,47 @@
-{
-  "agent_response_language": {
-    "mode": "match_user",
-    "language": "",
-    "available": [
-      "English",
-      "Russian",
-      "Spanish",
-      "German",
-      "French"
-    ],
-    "applies_to": [
-      "progress_updates",
-      "final_answers",
-      "clarifying_questions",
-      "user_facing_explanations"
-    ],
-    "exceptions": [
-      "code",
-      "commands",
-      "logs",
-      "quoted_text",
-      "user_requested_language"
-    ]
-  }
+﻿{
+    "agent_response_language":  {
+                                    "mode":  "fixed",
+                                    "language":  "Russian",
+                                    "languages":  [
+                                                      "Russian",
+                                                      "English"
+                                                  ],
+                                    "project_environment_languages":  [
+                                                                          "Russian",
+                                                                          "English"
+                                                                      ],
+                                    "task_language":  "Russian",
+                                    "task_languages":  [
+                                                           "Russian",
+                                                           "English"
+                                                       ],
+                                    "available":  [
+                                                      "English",
+                                                      "Russian",
+                                                      "Spanish",
+                                                      "German",
+                                                      "French"
+                                                  ],
+                                    "applies_to":  [
+                                                       "progress_updates",
+                                                       "final_answers",
+                                                       "clarifying_questions",
+                                                       "user_facing_explanations",
+                                                       "plans",
+                                                       "checklists"
+                                                   ],
+                                    "task_applies_to":  [
+                                                            "agent_created_task_titles",
+                                                            "agent_created_task_descriptions",
+                                                            "task_manager_updates"
+                                                        ],
+                                    "exceptions":  [
+                                                       "existing_task_text",
+                                                       "code",
+                                                       "commands",
+                                                       "logs",
+                                                       "quoted_text",
+                                                       "user_requested_language"
+                                                   ]
+                                }
 }

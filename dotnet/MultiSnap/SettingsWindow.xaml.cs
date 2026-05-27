@@ -12,20 +12,24 @@ public partial class SettingsWindow : Window
         Settings = new AppSettings
         {
             AreaCaptureHotkey = settings.AreaCaptureHotkey,
+            VideoRecordingHotkey = settings.VideoRecordingHotkey,
             StartMinimizedToTray = settings.StartMinimizedToTray,
             CopyCapturedImageToClipboard = settings.CopyCapturedImageToClipboard
         };
 
         InitializeComponent();
         AreaHotkeyCombo.ItemsSource = AppSettingsContract.AreaCaptureHotkeys;
-        SelectHotkey(Settings.AreaCaptureHotkey);
+        VideoHotkeyCombo.ItemsSource = AppSettingsContract.VideoRecordingHotkeys;
+        SelectAreaHotkey(Settings.AreaCaptureHotkey);
+        SelectVideoHotkey(Settings.VideoRecordingHotkey);
         StartMinimizedCheck.IsChecked = Settings.StartMinimizedToTray;
         CopyClipboardCheck.IsChecked = Settings.CopyCapturedImageToClipboard;
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        Settings.AreaCaptureHotkey = GetSelectedHotkey();
+        Settings.AreaCaptureHotkey = GetSelectedAreaHotkey();
+        Settings.VideoRecordingHotkey = GetSelectedVideoHotkey();
         Settings.StartMinimizedToTray = StartMinimizedCheck.IsChecked == true;
         Settings.CopyCapturedImageToClipboard = CopyClipboardCheck.IsChecked == true;
         DialogResult = true;
@@ -36,12 +40,17 @@ public partial class SettingsWindow : Window
         DialogResult = false;
     }
 
-    private void SelectHotkey(string hotkey)
+    private void SelectAreaHotkey(string hotkey)
     {
         AreaHotkeyCombo.SelectedItem = AppSettingsContract.NormalizeAreaCaptureHotkey(hotkey);
     }
 
-    private string GetSelectedHotkey()
+    private void SelectVideoHotkey(string hotkey)
+    {
+        VideoHotkeyCombo.SelectedItem = AppSettingsContract.NormalizeVideoRecordingHotkey(hotkey);
+    }
+
+    private string GetSelectedAreaHotkey()
     {
         if (AreaHotkeyCombo.SelectedItem is string hotkey)
         {
@@ -49,5 +58,15 @@ public partial class SettingsWindow : Window
         }
 
         return AppSettingsContract.DefaultAreaCaptureHotkey;
+    }
+
+    private string GetSelectedVideoHotkey()
+    {
+        if (VideoHotkeyCombo.SelectedItem is string hotkey)
+        {
+            return AppSettingsContract.NormalizeVideoRecordingHotkey(hotkey);
+        }
+
+        return AppSettingsContract.DefaultVideoRecordingHotkey;
     }
 }
