@@ -241,11 +241,14 @@ or:
 ## Task Managers
 
 - Treat task-manager configuration as project-local state.
-- Store the manager API endpoint in `base_url`; do not use a UI URL unless the
-  adapter explicitly says the same URL serves both UI and API.
-- Do not leave enabled manager endpoints empty, guessed, or set to `TODO`.
+- Store only the manager name or `service_id` plus non-secret project
+  preferences in project memory.
+- Resolve task-manager runtime URLs through GI config-service by service id;
+  do not store, guess, or copy API endpoints from old notes or other projects.
+- If a configured manager id is missing from config-service, stop with a concise
+  blocker instead of falling back to port scans or stale task-manager memory.
 - Before posting plans or starting sprint work, verify the workflow-specific
-  manager capabilities, not only generic health.
+  manager contract and capabilities, not only generic health.
 - Treat task managers as work queues and lifecycle recorders, not as the actors
   doing implementation work. The agent takes, implements, verifies, and reports
   tasks through the manager.
