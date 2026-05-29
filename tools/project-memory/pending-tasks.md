@@ -381,3 +381,17 @@ Risks or dependencies:
 Verification:
 
 - [x] dotnet build dotnet\MultiSnap\MultiSnap.csproj -p:OutputPath=bin\CodexVerify\.
+
+### Remove Electron Prototype
+
+Goal: remove the legacy Electron/Vite prototype now that the .NET/WPF app is the active runtime.
+
+Planned changes:
+
+- [x] Remove Electron source, config, package metadata, generated deps/build output, and old dev logs.
+- [x] Update root docs/ignore rules so the project points at the .NET app.
+- [x] Verify the remaining .NET app builds/checks.
+
+Verification:
+
+- [x] `dotnet build .\dotnet\MultiSnap\MultiSnap.csproj -p:Platform=x64`

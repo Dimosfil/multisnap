@@ -14,8 +14,6 @@ else {
 }
 
 $projectPath = Join-Path $ProjectRoot "dotnet\MultiSnap\MultiSnap.csproj"
-$packageJsonPath = Join-Path $ProjectRoot "package.json"
-$packageLockPath = Join-Path $ProjectRoot "package-lock.json"
 $installerScriptPath = Join-Path $ProjectRoot "installer\MultiSnap.iss"
 $statePath = Join-Path $ProjectRoot "artifacts\dotnet-version-state.json"
 $pendingStatePath = Join-Path $ProjectRoot "artifacts\dotnet-version-pending.json"
@@ -45,7 +43,7 @@ function Test-IsDotnetInput([System.IO.FileInfo] $File) {
     $relative = Get-RelativePath $File.FullName
     $segments = $relative -split "\\"
 
-    if ($segments[0] -ne "dotnet" -and $relative -ne "installer\MultiSnap.iss" -and $relative -ne "package.json" -and $relative -ne "package-lock.json") {
+    if ($segments[0] -ne "dotnet" -and $relative -ne "installer\MultiSnap.iss") {
         return $false
     }
 
@@ -59,16 +57,6 @@ function Test-IsDotnetInput([System.IO.FileInfo] $File) {
 function Get-NormalizedContent([System.IO.FileInfo] $File) {
     $relative = Get-RelativePath $File.FullName
     $content = Get-Content $File.FullName -Raw
-
-    if ($relative -eq "package.json" -or $relative -eq "package-lock.json") {
-        $count = 1
-        if ($relative -eq "package-lock.json") {
-            $count = 2
-        }
-
-        $regex = [System.Text.RegularExpressions.Regex]::new('("version"\s*:\s*")[^"]+(")')
-        return $regex.Replace($content, '${1}__VERSION__${2}', $count)
-    }
 
     if ($relative -eq "dotnet\MultiSnap\MultiSnap.csproj") {
         return [System.Text.RegularExpressions.Regex]::Replace($content, '(<Version>)[^<]+(</Version>)', '${1}__VERSION__${2}')
@@ -120,8 +108,6 @@ function Set-RegexVersion([string] $Path, [string] $Pattern, [string] $Replaceme
 }
 
 function Set-ProjectVersion([string] $Version) {
-    Set-RegexVersion $packageJsonPath '("version"\s*:\s*")[^"]+(")' "`${1}$Version`${2}"
-    Set-RegexVersion $packageLockPath '("version"\s*:\s*")[^"]+(")' "`${1}$Version`${2}" 2
     Set-RegexVersion $projectPath '(<Version>)[^<]+(</Version>)' "`${1}$Version`${2}"
     Set-RegexVersion $installerScriptPath '(#define\s+MyAppVersion\s+")[^"]+(")' "`${1}$Version`${2}"
 }

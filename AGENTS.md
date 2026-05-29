@@ -3,8 +3,9 @@
 ## Project
 
 MultiSnap is a Windows-first screenshot capture and annotation desktop app
-inspired by fast Monosnap-style workflows. The primary runtime surface is an
-Electron app with a React/Vite renderer and TypeScript main process.
+inspired by fast Monosnap-style workflows. The primary runtime surface is a
+.NET 8 Windows desktop app with a WPF UI, WinForms tray integration, global
+hotkeys, and Windows screen capture services.
 
 ## Restore Context
 
@@ -84,25 +85,25 @@ project-specific details.
 Install dependencies:
 
 ```powershell
-npm install
+dotnet restore .\dotnet\MultiSnap.sln
 ```
 
 Run:
 
 ```powershell
-npm run dev
+dotnet run --project .\dotnet\MultiSnap\MultiSnap.csproj
 ```
 
 Test:
 
 ```powershell
-npm run check
+dotnet build .\dotnet\MultiSnap\MultiSnap.csproj -p:Platform=x64
 ```
 
 Build:
 
 ```powershell
-npm run build
+dotnet publish .\dotnet\MultiSnap\MultiSnap.csproj -c Release -r win-x64 --self-contained false
 ```
 
 Inspect logs:
@@ -113,8 +114,8 @@ Get-Content .\*.log -Tail 120
 
 ## Working Areas
 
-- Source: `src/`
-- Tests: add tests near the changed source or under `src/` when introduced.
+- Source: `dotnet/`
+- Tests: add tests near the changed .NET source or under `dotnet/` when introduced.
 - Tools: `tools/`
 - Summaries: `tools/summary/`
 - Project memory: `tools/project-memory/`

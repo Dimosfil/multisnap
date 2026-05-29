@@ -13,12 +13,16 @@ MultiSnap is a Windows-first screenshot utility inspired by the fast capture and
 ## Development
 
 ```powershell
-npm install
-npm run dev
+dotnet run --project .\dotnet\MultiSnap\MultiSnap.csproj
+```
+
+Build the WPF app:
+
+```powershell
+dotnet build .\dotnet\MultiSnap\MultiSnap.csproj -p:Platform=x64
 ```
 
 Default shortcuts while the app is running:
 
-- `Ctrl+Shift+5` - capture a selected area.
-- `Ctrl+Shift+6` - capture the full screen.
-
+- `PrintScreen` - capture a selected area.
+- `Ctrl+Shift+PrintScreen` - start video recording.
