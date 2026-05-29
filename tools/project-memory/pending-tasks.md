@@ -14,6 +14,18 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### Build 0.1.13 Installer
+
+Goal: produce the Windows installer for the current MultiSnap 0.1.13 build.
+
+Execution order:
+
+- [~] Confirm project-local version and installer script.
+- [x] Confirm project-local version and installer script.
+- [x] Run project checks and production build.
+- [x] Run the installer build script.
+- [x] Verify the generated setup artifact.
+
 ### Screen Recording .NET Sprint 1
 
 Goal: start the screen recording feature as .NET-only work and seed settings with Ctrl+Shift+PrintScreen for video recording mode.
