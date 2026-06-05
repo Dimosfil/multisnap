@@ -1,6 +1,10 @@
 # Project Memory
 
-This folder stores durable project knowledge for AI agents.
+This folder stores concise, durable project knowledge for AI agents.
+
+Use Markdown and JSON files here for human-reviewable memory. Use the local
+SQLite database only as a generated search index that can be rebuilt from git
+tracked files.
 
 Use it for verified findings that should survive chat resets:
 
@@ -43,7 +47,7 @@ Recommendations should include:
 Do not include secrets, credentials, private user data, production data, or
 unnecessary project-specific details.
 
-## Agent Memory SQLite
+## SQLite Index
 
 If the project benefits from searchable agent memory, use a local SQLite
 database as an agent index/experience store, not as the application database.
@@ -54,9 +58,27 @@ Recommended path:
 tools/project-memory/project_memory.sqlite
 ```
 
-The SQLite file is usually local/generated and ignored by git when it is large
-or rebuildable. Commit the indexing script, schema notes, and Markdown exports
-instead.
+Rebuild it from git tracked repository content:
+
+```powershell
+python .\tools\project-memory\build_project_memory_index.py rebuild
+```
+
+Check index size:
+
+```powershell
+python .\tools\project-memory\build_project_memory_index.py stats
+```
+
+Search indexed content:
+
+```powershell
+python .\tools\project-memory\build_project_memory_index.py search "gi config"
+```
+
+The SQLite file is local/generated and ignored by git when it is large or
+rebuildable. Commit this README, durable Markdown notes, preference JSON files,
+schema notes, Markdown exports, and indexing scripts instead.
 
 Use the database for verified facts, searchable file/symbol indexes, debugging
 findings, useful commands, recurring failures, and durable notes with evidence

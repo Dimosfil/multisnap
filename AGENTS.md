@@ -43,6 +43,12 @@ live context small by starting new sessions for unrelated tasks, using compact
 handoff summaries instead of long investigation history, and splitting multi-step
 R&D when later steps do not need the full previous reasoning trace.
 
+Keep `gi start`, `gi restore`, and title-only startup messages scoped to
+compact orientation for the next turn. Mention remembered plans, stale task
+notes, old refactoring phases, or local commits ahead of a remote only when
+relevant; do not offer to continue, run, finish, or push remembered work unless
+the user explicitly asks for that action.
+
 ## Durable Memory
 
 Durable project knowledge lives in:
@@ -147,6 +153,55 @@ Get-Content .\*.log -Tail 120
   registration and discovery. Do not scan sibling project folders, guess ports,
   copy URLs from old task-manager memory, or use stale task-manager records as a
   runtime fallback.
+- Treat `gi config service on`, `gi config service off`,
+  `ги конфиг сервис on`, and `ги конфиг сервис off` as requests to set the
+  current application's project-local config-service self-registration flag.
+  `on` means the app should publish or refresh its own service record during
+  startup; `off` means it must not. Do not reinterpret this as starting or
+  stopping config-service itself. When setting `on`, first confirm a
+  config-service URL is already configured in the same local config area or
+  documented GI bootstrap config; if no URL is configured, tell the user to set
+  `gi config service url=<url>` before enabling self-registration. Ask one
+  short question if no local config location is documented.
+- For web-facing applications that expose a port, HTTP API, web UI,
+  task-manager service, or local daemon endpoint, require a live config-service
+  lookup before the process binds or reserves any port. On every startup, read
+  the configured config-service URL, verify the config service is reachable, and
+  query the app's own `service_id` startup/service record to learn the port and
+  neighboring service endpoints. If config-service is missing, unreachable, has
+  no record for the app, or returns an incomplete port/startup config, report a
+  clear blocker and wait for config-service to be configured, repaired, or
+  started; do not guess ports, scan for free ports, reuse stale local config, or
+  bind a fallback port. If the record exists but the currently documented
+  endpoints changed, refresh the record only after the config-service check
+  succeeds. MultiSnap is a desktop app, so normal startup must not query or
+  publish to config-service unless local instructions explicitly add a
+  discoverable web/API runtime.
+- Treat `gi ftp`, `ги фтп`, `gi ftp push`, `ги фтп пуш`, `gi upload ftp`,
+  `gi deploy ftp`, and `gi залей на фтп` as requests to upload the current
+  project's configured build output to FTP, FTPS, or SFTP. Treat
+  `gi ftp config`, `gi ftp конфиг`, and `ги фтп конфиг` as requests to create,
+  inspect, or update the project-local FTP/SFTP config without uploading. Treat
+  `gi ftp folder`, `gi ftp папка`, and `ги фтп папка` as requests to inspect,
+  choose, or update the remote upload folder (`remotePath`) without uploading.
+  Treat `gi ftp service`, `gi ftp сервис`, and `ги фтп сервис` as requests to
+  manually register, inspect, or select an FTP/FTPS/SFTP service record in
+  config-service without uploading. Read project-local deploy instructions and
+  `tools/deploy/ftp.local.json` first; when a project needs FTP and local config
+  does not name a target service, query config-service for FTP-capable services.
+  If exactly one matching service exists, use it after verifying its contract;
+  if several exist, ask the user to choose with the same numbered Markdown
+  checkbox style used by language selection. Keep secrets out of config-service:
+  store only discovery metadata and secret references such as environment
+  variable names. Keep project-specific deploy settings in the separate
+  project-local config file rather than shared instructions or chat history.
+  Prefer `tools/deploy/ftp.local.example.json` only as a redacted shape. Do not
+  commit hostnames, usernames, passwords, tokens, private keys, or private
+  remote paths unless project policy explicitly marks them non-secret.
+- Treat `gi reboot`, `ги ребут`, `gi restart`, and `ги рестарт` as requests to
+  start or restart the current application using project-local run instructions.
+  If the app is running, restart it; if it is not running, start it. Launch in
+  the background so focus does not jump away from the user's current window.
 - Treat `gi install`, `gi инсталл`, `ги инсталл`, and obvious typo variants
   such as `gi иснтлл` as requests to build the current project and produce an
   installer. Use Inno Setup by default when no installer tool is named. If the
@@ -196,8 +251,10 @@ Get-Content .\*.log -Tail 120
 - If `gi язык` or an equivalent unified project-language command is sent
   without explicit languages, run a three-step chat flow instead of asking for
   one free-form line. At each step, show the same numbered Markdown checklist of
-  available languages with the current selection checked, name the current
-  surface, and tell the user they may reply with numbers or language names.
+  available languages with the current selection checked, render choices as
+  task-list bullets such as `- [x] 1. English`, name the current surface, and
+  tell the user they may reply with numbers or language names. Do not use
+  ordered-task syntax such as `1. [x] English`.
 - When the user replies to that flow with a numeric-only answer such as `1 2`,
   interpret the numbers against the most recent language checklist and apply the
   resulting ordered languages to the current step. Do not ask which languages the
@@ -205,6 +262,13 @@ Get-Content .\*.log -Tail 120
 - Do not commit secrets, credentials, local databases, logs, or generated caches.
 - Do not print full `git diff` output by default. Prefer `git diff --stat` and
   targeted queries for relevant files or patterns.
+- Preserve text encodings when editing files. On Windows, do not rewrite source
+  files with PowerShell pipelines such as `Get-Content ... | Set-Content ...`
+  unless both read and write encodings are explicit and known correct. Prefer
+  `apply_patch`, editor-native saves, or language APIs that read and write the
+  file with an explicit encoding such as UTF-8. If non-ASCII text appears as
+  mojibake after a command, stop, restore the last clean file version, and
+  reapply only the intended small patch.
 - For first-pass project study, read local instructions, README, manifests, and
   config entry points before building a file map. Use recursive scans only after
   a targeted search fails or the task clearly requires repository-wide
@@ -239,6 +303,14 @@ Get-Content .\*.log -Tail 120
   analysis first. Explain the likely issue and ask what action the user wants
   before editing files, unless the user explicitly says to fix it, such as
   `fix`, `почини`, or `gi почини`.
+- Before running a WorkNest sprint workflow, verify required endpoint methods
+  and query parameters against the adapter contract. The current documented
+  `next-task` contract is
+  `GET /agent-intake/next-task?project=<project>&sprintId=<sprintId>`. If a
+  task-manager endpoint returns an unexpected method, parameter, or routing
+  error, re-read the adapter endpoint docs before trying any workaround. If the
+  documented contract still does not match the running service, report a stale
+  or misconfigured manager endpoint and stop before sending or completing work.
 - Keep commit-message language preferences separate from the agent's
   user-facing working language unless the user uses the unified project-language
   command.
@@ -267,5 +339,10 @@ Get-Content .\*.log -Tail 120
 - Treat shared-library files such as `COMMANDS.md` and `patterns/*.md` as
   upstream source material only when checking or applying accepted instruction
   kit updates; do not assume they exist locally in this project.
+- Run `gi обновить` quietly by default. Keep it scoped to accepted
+  instruction-kit updates and migrations. Do not reinterpret it as a request to
+  push pre-existing local commits, sync a feature branch, resume a remembered
+  plan, or perform general Git maintenance. Commit or push only changes created
+  by the update flow itself and only when the local update policy permits it.
 - When local project rules conflict with shared instructions, the local
   `AGENTS.md`, runbook, and working agreements take precedence.
