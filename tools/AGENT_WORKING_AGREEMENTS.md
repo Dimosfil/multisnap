@@ -277,6 +277,56 @@ or:
   rejection, or explicit intake-only documentation. Do not create replacement
   one-task plans to work around raw task receipts that cannot be advanced
   through lifecycle endpoints.
+- Treat `gi active task`, `gi next task`, and equivalent wording as requests to
+  obtain executable work through the configured manager's documented lifecycle
+  API. Use only lifecycle identifiers returned by the manager, and report
+  blockers when contract, auth, permissions, status updates, or readback are
+  unavailable.
+- Treat `gi add sprint`, `gi create sprint`, and equivalent wording as requests
+  to create a visible executable Sprint/Cycle through the configured manager.
+  Resolve the manager through config-service, use only documented create/read
+  operations, and do not downgrade the request to raw intake, local checklists,
+  Work Items, or one-task substitutes.
+- Treat `gi manager`, `gi tm`, and equivalent manager-test wording as requests
+  to inspect the configured manager through config-service. Read
+  `endpoints.guide` when present, then `endpoints.contract`, and use
+  `endpoints.api` only for documented operations.
+- Agent-facing HTTP services should publish an onboarding guide endpoint and a
+  strict contract endpoint. Stop on guide/contract mismatches about endpoints,
+  workflow ownership, lifecycle identifiers, permissions, or supported object
+  types.
+
+## Feature Workflow Contracts
+
+- For non-trivial features, keep durable project-local feature documents that
+  include idea, functional description, workflow contract, implementation plan,
+  sprint breakdown, tasks, definitions of done, and verification.
+- Before changing a feature with a recorded contract, read it and preserve its
+  user-visible guarantees unless the user explicitly changes them.
+- If implementation changes the agreed workflow, update the contract in the
+  same scoped change and report the behavior change.
+- Use `tools/templates/FEATURE_WORKFLOW_CONTRACT.template.md` for new
+  contracts when no more specific project template exists.
+
+## Repository Cleanup
+
+- Do not delete `AGENTS.md`, `tools/`, `tools/project-memory/`, `skills/`,
+  bootstrap scripts, update scripts, deploy scripts, or agent-facing
+  instruction/config files merely because they look internal. Inspect their
+  purpose first and delete only with explicit user confirmation.
+- Classify `*.sqlite`, `*.sqlite3`, and `*.db` before deleting or committing.
+  Never commit databases containing secrets, private data, telemetry,
+  task-manager state, absolute local paths, or agent conversation history.
+
+## Configuration Boundaries
+
+- Keep deployment, runtime, machine, service, credential, path, feature-flag,
+  model, limit, and operational-policy values in project-local config,
+  environment variables, service discovery records, or secret references when
+  they vary by environment.
+- Avoid embedding machine-specific absolute paths in committed source,
+  instructions, or examples; validate configured absolute paths at startup or
+  I/O boundaries.
 
 ## Verification
 

@@ -163,6 +163,32 @@ Get-Content .\*.log -Tail 120
   documented GI bootstrap config; if no URL is configured, tell the user to set
   `gi config service url=<url>` before enabling self-registration. Ask one
   short question if no local config location is documented.
+- Treat `gi manager`, `gi tm`, `gi manager test`, `ги менеджер`, and
+  `ги манагер` as task-manager inspection commands. Read the enabled manager id
+  or `service_id` from project-local task-manager config, resolve it through
+  config-service, read `endpoints.guide` when present, then read
+  `endpoints.contract`, and use `endpoints.api` only for documented manager
+  operations. Ignore legacy `base_url` values unless a local migration rule
+  explicitly converts them into config-service records.
+- Treat `gi active task`, `gi next task`, `gi get task`, and equivalent
+  active-task wording as requests to obtain executable work from the configured
+  task manager. Use only documented active-task, next-task, start/progress,
+  blocker, completion, and readback operations, and only lifecycle identifiers
+  returned by the manager.
+- Treat `gi add sprint`, `gi create sprint`, `gi добавить спринт`, and
+  equivalent add-sprint wording as requests to create a visible executable
+  Sprint/Cycle through the configured task manager. Resolve the manager through
+  config-service, normalize the title, goal, and tasks into the documented
+  executable shape, read the created object back when supported, and do not
+  downgrade the request to raw intake, Work Items, local checklists, or one-task
+  substitutes.
+- Agent-facing HTTP services should expose a compact guide endpoint plus a
+  strict contract endpoint, preferably `GET /agent/guide` and
+  `GET /agent/contract`, or adapter-specific equivalents such as
+  `GET /agent-intake/guide` and `GET /agent-intake/contract`. Read the guide
+  first when present, then the contract, and stop on guide/contract mismatches
+  about endpoints, ownership, lifecycle identifiers, permissions, or supported
+  object types.
 - For web-facing applications that expose a port, HTTP API, web UI,
   task-manager service, or local daemon endpoint, require a live config-service
   lookup before the process binds or reserves any port. On every startup, read
@@ -215,6 +241,13 @@ Get-Content .\*.log -Tail 120
   metadata, and installer filename aligned with that version when local tooling
   supports it. Do not use shared-instruction version numbers such as `VERSION.md`
   as the application version for another project.
+- Keep configuration boundaries explicit. Do not hard-code deployment,
+  runtime, machine, service, credential, path, feature-flag, model, limit, or
+  operational-policy values when they belong in project-local config,
+  environment variables, service discovery records, or secret references. Avoid
+  embedding machine-specific absolute paths in committed source, shared
+  instructions, or examples; validate configured absolute paths at startup or
+  I/O boundaries.
 - Treat nested checkouts, vendored repositories, cloned examples, and
   third-party source trees as separate scope. Do not inspect them as part of the
   main project unless the user explicitly asks, the task is about that nested
@@ -269,6 +302,26 @@ Get-Content .\*.log -Tail 120
   file with an explicit encoding such as UTF-8. If non-ASCII text appears as
   mojibake after a command, stop, restore the last clean file version, and
   reapply only the intended small patch.
+- Do not remove `AGENTS.md`, `tools/`, `tools/project-memory/`, `skills/`,
+  bootstrap scripts, update scripts, deploy scripts, or agent-facing
+  instruction/config files merely because they look internal. Inspect their
+  purpose first and treat them as possible RAG/startup infrastructure; delete
+  them only when the user explicitly confirms they are temporary or unrelated
+  to the project.
+- Classify `*.sqlite`, `*.sqlite3`, and `*.db` before deleting or committing.
+  Keep rebuildable generated agent-memory indexes ignored, but preserve useful
+  README files, Markdown/JSON memory exports, schemas, and indexing scripts.
+  Never commit databases containing secrets, private data, telemetry,
+  task-manager state, absolute local paths, or agent conversation history.
+- For non-trivial features, keep a durable project-local feature document with
+  the feature idea, functional description, workflow contract, implementation
+  plan, sprint breakdown, tasks, definitions of done, and verification. Before
+  changing a feature with a recorded contract, read it and preserve its
+  user-visible guarantees unless the user explicitly changes the agreement. If
+  implementation changes the agreed workflow, update the contract in the same
+  scoped change and report the behavior change. Use
+  `tools/templates/FEATURE_WORKFLOW_CONTRACT.template.md` when a new contract
+  is needed.
 - For first-pass project study, read local instructions, README, manifests, and
   config entry points before building a file map. Use recursive scans only after
   a targeted search fails or the task clearly requires repository-wide
