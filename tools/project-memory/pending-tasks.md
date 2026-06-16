@@ -395,3 +395,26 @@ Planned changes:
 Verification:
 
 - [x] `dotnet build .\dotnet\MultiSnap\MultiSnap.csproj -p:Platform=x64`
+
+### GI Instruction Kit Update 2026.06.16.5
+
+Goal: apply accepted general-instructions migrations from `2026.06.11.6` through `2026.06.16.5` without changing unrelated product code.
+
+Planned changes:
+
+- [x] Add/update project-memory RAG structure, semantic chunk export, and optional Chroma adapter files.
+- [x] Update local agent command rules for task-manager sync, `gi install`, shared-instruction init, and verification plan contracts.
+- [x] Record applied migration metadata after verification.
+- [x] Run scoped verification checks and handle commit/push according to local GI update policy.
+
+Risks or dependencies:
+
+- [!] Generated SQLite, JSONL, and vector indexes must remain ignored.
+- [!] Preserve MultiSnap-specific local instructions while applying shared instruction updates.
+
+Verification:
+
+- [x] `git diff --check`
+- [x] JSON validation for `tools/project-memory/rag-system.json` and `tools/project-memory/instruction-kit.json`
+- [x] `python -m py_compile` for updated project-memory scripts
+- [x] Project-memory index rebuild/stats/export checks

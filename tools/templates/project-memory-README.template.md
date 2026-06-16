@@ -1,10 +1,6 @@
 # Project Memory
 
-This folder stores concise, durable project knowledge for AI agents.
-
-Use Markdown and JSON files here for human-reviewable memory. Use the local
-SQLite database only as a generated search index that can be rebuilt from git
-tracked files.
+This folder stores durable project knowledge for AI agents.
 
 Use it for verified findings that should survive chat resets:
 
@@ -24,10 +20,11 @@ When this project reveals a reusable workflow, failure pattern, token-saving
 tactic, or agent-instruction improvement, write a concise recommendation for the
 shared instruction kit.
 
-Prefer the shared intake folder when available:
+Prefer the `updates/` folder in an available checkout/cache of the canonical
+shared-instruction source repo when this repository is being maintained:
 
 ```text
-$env:GENERAL_INSTRUCTIONS_HOME\updates\
+<general-instructions checkout>\updates\
 ```
 
 If the shared library is unavailable, use a local intake folder:
@@ -47,7 +44,7 @@ Recommendations should include:
 Do not include secrets, credentials, private user data, production data, or
 unnecessary project-specific details.
 
-## SQLite Index
+## Agent Memory SQLite
 
 If the project benefits from searchable agent memory, use a local SQLite
 database as an agent index/experience store, not as the application database.
@@ -58,27 +55,9 @@ Recommended path:
 tools/project-memory/project_memory.sqlite
 ```
 
-Rebuild it from git tracked repository content:
-
-```powershell
-python .\tools\project-memory\build_project_memory_index.py rebuild
-```
-
-Check index size:
-
-```powershell
-python .\tools\project-memory\build_project_memory_index.py stats
-```
-
-Search indexed content:
-
-```powershell
-python .\tools\project-memory\build_project_memory_index.py search "gi config"
-```
-
-The SQLite file is local/generated and ignored by git when it is large or
-rebuildable. Commit this README, durable Markdown notes, preference JSON files,
-schema notes, Markdown exports, and indexing scripts instead.
+The SQLite file is usually local/generated and ignored by git when it is large
+or rebuildable. Commit the indexing script, schema notes, and Markdown exports
+instead.
 
 Use the database for verified facts, searchable file/symbol indexes, debugging
 findings, useful commands, recurring failures, and durable notes with evidence
@@ -100,42 +79,29 @@ Markdown as the concise reviewable export.
 
 ## RAG System Structure
 
-Treat RAG as a layered project-memory system, not as a synonym for vector
-search. Keep source corpus rules, exclusions, manifest metadata, chunk
-metadata, structured memory, retrieval adapters, context packets, observability,
-evals, and writeback as separate responsibilities.
-
-The project-local RAG manifest is:
+When the project needs retrieval that can grow beyond Markdown and SQLite FTS,
+add:
 
 ```text
 tools/project-memory/rag-system.json
 ```
 
-Use SQLite FTS for exact paths, commands, symbols, versions, and error text
-before adding semantic retrieval. Before enabling vector retrieval, export
-semantic-ready chunks and record embedding metadata including model reference,
-provider, dimensions, collection name, collection version, chunking rule, and
-indexed time. Do not mix embeddings from different models or dimensions in one
-collection version.
+Use `templates/rag-system.template.json` as the starter shape and
+`patterns/RAG_SYSTEM_STRUCTURE.md` as the architecture rule. Keep vector stores
+such as Chroma, Qdrant, and pgvector behind retrieval adapters so prompts and
+agent workflows do not depend on one storage backend.
 
-The generated semantic chunk export is rebuildable and ignored:
+Before enabling vector retrieval, prepare semantic-ready chunks and embedding
+metadata with `patterns/SEMANTIC_RAG_RETRIEVAL.md`. Keep generated files such as
+`tools/project-memory/semantic-corpus.jsonl` ignored.
 
-```powershell
-python .\tools\project-memory\build_project_memory_index.py export-chunks
-```
-
-For a local semantic MVP, build Chroma from exported chunks while keeping Chroma
-behind the retrieval adapter contract:
+For a local semantic MVP, build Chroma from exported chunks:
 
 ```powershell
 python .\tools\project-memory\build_project_memory_index.py rebuild
 python .\tools\project-memory\build_project_memory_index.py export-chunks
 uv run --with chromadb python .\tools\project-memory\build_chroma_index.py rebuild
 ```
-
-Keep generated semantic corpora, embedding caches, and vector indexes ignored
-when rebuildable. Commit only reviewable config, docs, schemas, evals, and
-scripts.
 
 ## Suggested Files
 

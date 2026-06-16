@@ -168,6 +168,11 @@ or:
 - Use the instruction kit as a token-economy and RAG-startup layer: restore only
   task-relevant context from local instructions, summaries, targeted searches,
   and project memory instead of broad repository reads or large outputs.
+- Treat RAG as a layered system, not as a synonym for vector search. Use SQLite
+  FTS for exact paths, commands, symbols, versions, and error text before adding
+  semantic retrieval. Keep Chroma, Qdrant, pgvector, and similar stores behind a
+  retrieval adapter contract, and keep generated semantic corpora, embedding
+  caches, and vector indexes ignored when rebuildable.
 - Keep `gi` command responses scoped to the shared instruction-kit command. Do
   not resume an older product task after a `gi` command unless the user
   explicitly asks.
@@ -189,6 +194,11 @@ or:
   test commands and produce a compact verification plan for the current feature,
   bug fix, or release check. Plan first; run checks only when the user asks or
   when the current task already requires verification.
+- For verification plans and smoke checks, confirm exact CLI flags, ports,
+  routes, methods, JSON payload fields, health endpoints, and required
+  environment variables from current local instructions, manifests, config, or
+  source code. Summaries, task notes, screenshots, and old chat snippets are
+  evidence, not authoritative command contracts.
 - Treat `gi install`, `gi инсталл`, `ги инсталл`, and obvious typo variants
   such as `gi иснтлл` as requests to build the current project and produce an
   installer. Use Inno Setup by default when no installer tool is named. If the
@@ -203,8 +213,17 @@ or:
   supports it. Do not use shared-instruction version numbers such as `VERSION.md`
   as the application version for another project. After success, report the
   build result, installer artifact path, version used, and checks performed.
+- Treat restore, dependency install, build, and test as preliminary checks for
+  `gi install`, not as completion. Complete `gi install` only after the
+  packaging command runs and a current installer artifact is produced or
+  explicitly verified. If only verification checks ran, say so plainly.
 - Treat a first message that points to a shared instruction library as an
   instruction bootstrap, not as a request to add that library as a dependency.
+- Treat `init <source>`, `инит <source>`, `инициализируй <source>`, and
+  `инит правила <source>` as shared-instruction bootstrap/startup requests when
+  `<source>` points to a known `general-instructions` source. Never reinterpret
+  these forms as `git init`, folder creation, OpenCode setup, project creation,
+  `npm init`, or `python -m venv` unless the user explicitly names that action.
 - If the user asks to update from a shared instruction library and this project
   has no `tools/project-memory/instruction-kit.json`, treat that as first-time
   instruction bootstrap/init.
@@ -287,6 +306,13 @@ or:
   Resolve the manager through config-service, use only documented create/read
   operations, and do not downgrade the request to raw intake, local checklists,
   Work Items, or one-task substitutes.
+- Treat task-manager sync commands as routine integration steps once the user
+  has supplied sprint/task content or selected the workflow. Follow
+  config-service discovery, service guide, strict contract, documented payload,
+  lifecycle identifiers, readback, and blocker reporting. Do not replace
+  manager API work with `project-memory`, `pending-tasks.md`, raw intake
+  receipts, guessed commands, local checklists, Work Items, or "tell me the
+  exact command" fallback.
 - Treat `gi manager`, `gi tm`, and equivalent manager-test wording as requests
   to inspect the configured manager through config-service. Read
   `endpoints.guide` when present, then `endpoints.contract`, and use

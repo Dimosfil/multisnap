@@ -1,12 +1,3 @@
-bin/
-obj/
-.idea/
-*.log
-.env
-.env.local
-__pycache__/
-*.pyc
-
 # Local/generated AI-agent memory and runtime noise
 tools/project-memory/*.sqlite
 tools/project-memory/*.sqlite-*
@@ -17,5 +8,5 @@ tools/project-memory/chroma/
 tools/project-memory/embedding-cache/
 tools/project-memory/semantic-corpus*.jsonl
 tools/summary/*.tmp
-artifacts/dotnet-version-state.json
-artifacts/dotnet-version-pending.json
+tools/deploy/ftp.local.json
+*.log

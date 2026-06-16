@@ -33,6 +33,13 @@ specific terms, and query SQLite memory only with small `LIMIT`s. For `gi start`
 the next turn; do not read full summaries, runbooks, memory notes, logs, or diffs
 unless a concrete task needs them.
 
+Treat RAG as a layered system, not as a synonym for vector search. Use SQLite
+FTS for exact paths, commands, symbols, versions, and error text before adding
+semantic retrieval. Keep Chroma, Qdrant, pgvector, and similar stores behind a
+retrieval adapter contract so prompts, `gi` startup, and memory writeback do not
+depend on one vector database. Keep generated semantic corpora, embedding
+caches, and vector indexes ignored when rebuildable.
+
 The copied instruction kit is a token-economy and RAG-startup layer for this
 project. Use it to restore only the needed context from local instructions,
 handoff summaries, targeted searches, and project memory instead of reading the
@@ -182,6 +189,13 @@ Get-Content .\*.log -Tail 120
   executable shape, read the created object back when supported, and do not
   downgrade the request to raw intake, Work Items, local checklists, or one-task
   substitutes.
+- Treat task-manager sync commands as routine integration steps once the user
+  has supplied sprint/task content or selected the workflow. Follow
+  config-service discovery, service guide, strict contract, documented payload,
+  lifecycle identifiers, readback, and blocker reporting. Do not replace
+  manager API work with `project-memory`, `pending-tasks.md`, raw intake
+  receipts, guessed commands, local checklists, Work Items, or "tell me the
+  exact command" fallback.
 - Agent-facing HTTP services should expose a compact guide endpoint plus a
   strict contract endpoint, preferably `GET /agent/guide` and
   `GET /agent/contract`, or adapter-specific equivalents such as
@@ -241,6 +255,12 @@ Get-Content .\*.log -Tail 120
   metadata, and installer filename aligned with that version when local tooling
   supports it. Do not use shared-instruction version numbers such as `VERSION.md`
   as the application version for another project.
+- Treat restore, dependency install, build, and test as preliminary checks for
+  `gi install`, not as completion. Complete `gi install` only after the
+  project-local packaging command runs and a current installer artifact is
+  produced or explicitly verified. If only verification checks ran, say so
+  plainly and do not describe the project as installed or restored. On success,
+  report the installer artifact path, version, and checks.
 - Keep configuration boundaries explicit. Do not hard-code deployment,
   runtime, machine, service, credential, path, feature-flag, model, limit, or
   operational-policy values when they belong in project-local config,
@@ -356,6 +376,14 @@ Get-Content .\*.log -Tail 120
   analysis first. Explain the likely issue and ask what action the user wants
   before editing files, unless the user explicitly says to fix it, such as
   `fix`, `почини`, or `gi почини`.
+- Treat `gi test plan`, `gi тест-план`, and equivalent verification-plan
+  wording as requests to inspect current project-local test, smoke-check, API,
+  UI, or CLI command contracts before recommending or running checks. Verify
+  exact commands, CLI flags, ports, routes, health endpoints, request payload
+  fields, and environment variables from current local instructions, runbooks,
+  manifests, config entry points, or source code. Treat handoff summaries, task
+  notes, screenshots, and old chat examples as status evidence, not
+  authoritative command contracts.
 - Before running a WorkNest sprint workflow, verify required endpoint methods
   and query parameters against the adapter contract. The current documented
   `next-task` contract is
@@ -392,6 +420,14 @@ Get-Content .\*.log -Tail 120
 - Treat shared-library files such as `COMMANDS.md` and `patterns/*.md` as
   upstream source material only when checking or applying accepted instruction
   kit updates; do not assume they exist locally in this project.
+- Treat `init <source>`, `инит <source>`, `инициализируй <source>`, and
+  `инит правила <source>` as shared-instruction bootstrap/startup requests when
+  `<source>` points to the canonical shared-instruction Git repository, the
+  current shared-instruction checkout/cache, `GENERAL_INSTRUCTIONS_HOME`, or
+  another known `general-instructions` source. Read existing instruction files
+  and follow GI bootstrap/startup rules. Do not reinterpret those forms as
+  `git init`, folder creation, OpenCode setup, project creation, `npm init`, or
+  `python -m venv` unless the user explicitly names that action.
 - Run `gi обновить` quietly by default. Keep it scoped to accepted
   instruction-kit updates and migrations. Do not reinterpret it as a request to
   push pre-existing local commits, sync a feature branch, resume a remembered

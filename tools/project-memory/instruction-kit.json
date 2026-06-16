@@ -1,5 +1,5 @@
-﻿{
-    "instruction_kit_version":  "2026.06.11.5",
+{
+    "instruction_kit_version":  "2026.06.16.5",
     "source":  "https://github.com/Dimosfil/general-instructions.git",
     "installed_at":  "2026-05-21T07:23:55.9766359+03:00",
     "update_check":  {
@@ -15,15 +15,22 @@
                          "tools/agent-start.ps1",
                          "tools/project-memory/README.md",
                          "tools/project-memory/build_project_memory_index.py",
+                         "tools/project-memory/build_chroma_index.py",
                          "tools/project-memory/STUDY_PLAN.md",
                          "tools/project-memory/pending-tasks.md",
                          "tools/project-memory/git-preferences.json",
                          "tools/project-memory/system-preferences.json",
+                         "tools/project-memory/rag-system.json",
+                         "tools/project-memory/semantic-retrieval-evals.md",
                          "tools/select-git-commit-languages.ps1",
                          "tools/select-system-language.ps1",
                          "tools/select-project-language.ps1",
                          "tools/check-instruction-kit-updates.ps1",
                          "tools/templates/FEATURE_WORKFLOW_CONTRACT.template.md",
+                         "tools/templates/gitignore-agent-memory.template",
+                         "tools/templates/project-memory-README.template.md",
+                         "tools/templates/rag-system.template.json",
+                         "tools/templates/semantic-retrieval-evals.template.md",
                          ".gitignore"
                      ],
     "applied_migrations":  [
@@ -99,7 +106,14 @@
                                "2026.06.11.2__add_feature_workflow_contracts",
                                "2026.06.11.3__add_feature_planning_hierarchy",
                                "2026.06.11.4__clarify_gi_manager_config_service_flow",
-                               "2026.06.11.5__self_apply_and_propagate_accepted_rules"
+                               "2026.06.11.5__self_apply_and_propagate_accepted_rules",
+                               "2026.06.11.6__universal_gi_and_routine_task_manager_sync",
+                               "2026.06.11.7__add_unified_rag_system_structure",
+                               "2026.06.16.1__add_semantic_rag_embedding_step",
+                               "2026.06.16.2__add_local_chroma_adapter",
+                               "2026.06.16.3__require_gi_install_packaging_completion",
+                               "2026.06.16.4__clarify_general_instructions_init",
+                               "2026.06.16.5__verify_test_plan_command_contracts"
                            ],
-    "last_update_check_at":  "2026-06-11T16:29:27+03:00"
+    "last_update_check_at":  "2026-06-16T16:46:06+03:00"
 }
