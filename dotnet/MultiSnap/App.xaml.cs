@@ -210,8 +210,8 @@ public partial class App : Application
     {
         try
         {
-            var screenshot = _capture.CaptureCursorDisplay();
-            var overlay = new OverlayWindow(screenshot, _capture);
+            var screenshot = _capture.CaptureVirtualDesktop();
+            var overlay = new OverlayWindow(screenshot, _capture, overlayBounds: _capture.GetVirtualDesktopBounds());
             if (_mainWindow?.IsVisible == true)
             {
                 overlay.Owner = _mainWindow;
@@ -233,7 +233,7 @@ public partial class App : Application
     {
         try
         {
-            OpenEditor(_capture.CaptureCursorDisplay());
+            OpenEditor(_capture.CaptureVirtualDesktop());
         }
         catch (Exception ex)
         {

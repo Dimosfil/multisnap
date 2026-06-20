@@ -122,16 +122,27 @@ public partial class MainWindow : Window
         {
             context.DrawImage(_currentImage, new Rect(0, 0, originalWidth, originalHeight));
 
-            var scaleX = originalWidth / Math.Max(1, CaptureImage.ActualWidth);
-            var scaleY = originalHeight / Math.Max(1, CaptureImage.ActualHeight);
             var group = new DrawingGroup();
             using (var inkContext = group.Open())
             {
                 InkLayer.Strokes.Draw(inkContext);
             }
 
-            context.PushTransform(new ScaleTransform(scaleX, scaleY));
+            var imageBounds = GetDisplayedImageBounds(originalWidth, originalHeight);
+            var scaleX = originalWidth / Math.Max(1, imageBounds.Width);
+            var scaleY = originalHeight / Math.Max(1, imageBounds.Height);
+            var inkToImage = new Matrix(
+                scaleX,
+                0,
+                0,
+                scaleY,
+                -imageBounds.X * scaleX,
+                -imageBounds.Y * scaleY);
+
+            context.PushClip(new RectangleGeometry(new Rect(0, 0, originalWidth, originalHeight)));
+            context.PushTransform(new MatrixTransform(inkToImage));
             context.DrawDrawing(group);
+            context.Pop();
             context.Pop();
         }
 
@@ -139,5 +150,24 @@ public partial class MainWindow : Window
         bitmap.Render(visual);
         bitmap.Freeze();
         return bitmap;
+    }
+
+    private Rect GetDisplayedImageBounds(int imagePixelWidth, int imagePixelHeight)
+    {
+        var controlWidth = Math.Max(1, CaptureImage.ActualWidth);
+        var controlHeight = Math.Max(1, CaptureImage.ActualHeight);
+        var imageAspect = imagePixelWidth / Math.Max(1.0, imagePixelHeight);
+        var controlAspect = controlWidth / controlHeight;
+
+        if (controlAspect > imageAspect)
+        {
+            var displayedHeight = controlHeight;
+            var displayedWidth = displayedHeight * imageAspect;
+            return new Rect((controlWidth - displayedWidth) / 2, 0, displayedWidth, displayedHeight);
+        }
+
+        var width = controlWidth;
+        var height = width / imageAspect;
+        return new Rect(0, (controlHeight - height) / 2, width, height);
     }
 }

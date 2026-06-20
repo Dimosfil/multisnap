@@ -14,6 +14,38 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### Copy Annotation Alignment Fix
+
+Goal: keep editor ink/selection aligned with the screenshot when Copy or Save PNG exports the composed image.
+
+Planned changes:
+
+- [x] Inspect editor image/ink coordinate mapping.
+- [x] Export ink relative to the displayed screenshot bounds, not the full editor surface.
+- [x] Verify the .NET build.
+- [x] Produce the current installer artifact: `artifacts/installer/MultiSnap-Setup-0.1.16.exe`.
+
+### Build 0.1.15 Installer
+
+Goal: produce the Windows installer for the current MultiSnap 0.1.15 build.
+
+Execution order:
+
+- [x] Confirm project-local version and installer script.
+- [x] Run the installer build script.
+- [x] Verify the generated setup artifact.
+
+### Whole Desktop Screenshot Capture
+
+Goal: make screenshot capture and the selection overlay cover the entire virtual desktop across all monitors instead of only the display under the cursor.
+
+Planned changes:
+
+- [x] Locate the current monitor selection path.
+- [x] Capture `SystemInformation.VirtualScreen` for screenshot workflows.
+- [x] Size the WPF overlay to the virtual desktop bounds.
+- [x] Verify the .NET build.
+
 ### Build 0.1.13 Installer
 
 Goal: produce the Windows installer for the current MultiSnap 0.1.13 build.

@@ -19,7 +19,12 @@ public partial class OverlayWindow : Window
     private readonly string _screenDeviceName;
     private WpfPoint? _startPoint;
 
-    public OverlayWindow(BitmapSource screenshot, ScreenCaptureService capture, OverlayMode mode = OverlayMode.ScreenshotCapture)
+    public OverlayWindow(
+        BitmapSource screenshot,
+        ScreenCaptureService capture,
+        OverlayMode mode = OverlayMode.ScreenshotCapture,
+        System.Drawing.Rectangle? overlayBounds = null,
+        string? screenDeviceName = null)
     {
         _screenshot = screenshot;
         _capture = capture;
@@ -27,8 +32,8 @@ public partial class OverlayWindow : Window
         InitializeComponent();
 
         var screen = Forms.Screen.FromPoint(Forms.Cursor.Position);
-        _screenBounds = screen.Bounds;
-        _screenDeviceName = screen.DeviceName;
+        _screenBounds = overlayBounds ?? screen.Bounds;
+        _screenDeviceName = screenDeviceName ?? screen.DeviceName;
         Left = _screenBounds.Left;
         Top = _screenBounds.Top;
         Width = _screenBounds.Width;

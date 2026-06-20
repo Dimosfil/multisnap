@@ -9,6 +9,16 @@ namespace MultiSnap.Services;
 
 public sealed class ScreenCaptureService
 {
+    public Rectangle GetVirtualDesktopBounds()
+    {
+        return Forms.SystemInformation.VirtualScreen;
+    }
+
+    public BitmapSource CaptureVirtualDesktop()
+    {
+        return CaptureBounds(GetVirtualDesktopBounds());
+    }
+
     public BitmapSource CaptureCursorDisplay()
     {
         var screen = Forms.Screen.FromPoint(Forms.Cursor.Position);
