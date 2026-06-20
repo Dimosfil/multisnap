@@ -418,3 +418,26 @@ Verification:
 - [x] JSON validation for `tools/project-memory/rag-system.json` and `tools/project-memory/instruction-kit.json`
 - [x] `python -m py_compile` for updated project-memory scripts
 - [x] Project-memory index rebuild/stats/export checks
+
+### GI Instruction Kit Update 2026.06.19.3
+
+Goal: apply accepted general-instructions migrations from `2026.06.16.6` through `2026.06.19.3` without changing unrelated product code.
+
+Planned changes:
+
+- [x] Update local GI command rules for first launch, help, rebuild, reboot, sprint startup, docs retrieval, and language prompts.
+- [x] Update project-memory/RAG guidance, specs, evals, and architecture-history files.
+- [x] Record applied migration metadata after verification.
+- [ ] Run scoped verification checks and handle commit/push according to local GI update policy.
+
+Risks or dependencies:
+
+- [!] Preserve MultiSnap-specific desktop-app and project-boundary instructions.
+- [!] Generated SQLite, semantic corpus, vector indexes, logs, and secrets must remain uncommitted.
+
+Verification:
+
+- [x] `git diff --check`
+- [x] JSON validation for `tools/project-memory/rag-system.json` and `tools/project-memory/instruction-kit.json`
+- [x] PowerShell syntax validation for updated scripts
+- [x] Project-memory SQL and semantic chunk node rebuilds

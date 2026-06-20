@@ -17,7 +17,9 @@
       "id": "project-memory",
       "paths": [
         "tools/project-memory/*.md",
-        "tools/project-memory/*.json"
+        "tools/project-memory/*.json",
+        "tools/project-memory/**/*.md",
+        "tools/project-memory/**/*.json"
       ],
       "trust": "project-local",
       "include": true
@@ -84,6 +86,67 @@
     "max_estimated_tokens": 4000,
     "require_source_paths": true,
     "include_rejected_source_summary": false
+  },
+  "activation_limits": {
+    "structured_memory": {
+      "default_enabled": true,
+      "max_query_results": 20,
+      "small_limit_default": 8,
+      "requires_source_verification_before_edit": true
+    },
+    "vector_retrieval": {
+      "default_enabled": false,
+      "max_query_results": 12,
+      "requires_explicit_enablement": true,
+      "requires_embedding_metadata": true,
+      "requires_source_verification_before_edit": true
+    }
+  },
+  "rebuild": {
+    "full_command": "gi tools rebuild",
+    "aliases": [
+      "gi rag rebuild"
+    ],
+    "requires_confirmation": true,
+    "last_full_rebuild_migration": "2026.06.16.5",
+    "last_full_rebuild_at": "",
+    "node_commands": {
+      "sql": {
+        "command": "python .\\tools\\project-memory\\build_project_memory_index.py rebuild",
+        "status_command": "python .\\tools\\project-memory\\build_project_memory_index.py stats"
+      },
+      "chunks": {
+        "command": "python .\\tools\\project-memory\\build_project_memory_index.py export-chunks",
+        "status_command": ""
+      },
+      "vector": {
+        "command": "uv run --with chromadb python .\\tools\\project-memory\\build_chroma_index.py rebuild",
+        "status_command": "uv run --with chromadb python .\\tools\\project-memory\\build_chroma_index.py stats",
+        "enabled": false
+      },
+      "manifest": {
+        "command": "",
+        "status_command": "",
+        "configured": false
+      },
+      "evals": {
+        "command": "",
+        "status_command": "",
+        "configured": false
+      }
+    },
+    "last_node_rebuilds": {
+      "sql": {
+        "last_rebuild_at": "2026-06-20T15:03:50+00:00",
+        "last_rebuild_migration": "2026.06.19.3",
+        "status": "succeeded"
+      },
+      "chunks": {
+        "last_rebuild_at": "2026-06-20T15:03:50+00:00",
+        "last_rebuild_migration": "2026.06.19.3",
+        "status": "succeeded"
+      }
+    }
   },
   "writeback": {
     "write_verified_findings": true,

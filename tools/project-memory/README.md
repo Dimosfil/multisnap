@@ -6,13 +6,23 @@ Use Markdown and JSON files here for human-reviewable memory. Use the local
 SQLite database only as a generated search index that can be rebuilt from git
 tracked files.
 
+Treat this folder as the durable, portable product specification layer. Keep
+non-trivial feature algorithms, business logic, workflow contracts, data rules,
+architecture migration history, verification guarantees, and implementation
+maps here so another agent can rebuild the same behavior on a different
+language, framework, platform, or UI stack. Treat `tools/summary/` as compact
+chat handoff state, not as the canonical product specification.
+
 Use it for verified findings that should survive chat resets:
 
 - architecture notes
+- architecture migration history
 - debugging findings
 - important decisions
 - known pitfalls
 - local workflows
+- feature workflow contracts
+- business-rule, data-model, and integration specifications
 - dependency maps
 - reusable agent experience that may improve `gi`
 
@@ -90,9 +100,17 @@ feature name with small limits.
 ## Two Memory Layers
 
 - Markdown is the human-reviewable layer. Keep summaries, decisions,
-  architecture notes, and curated exports concise.
+  architecture notes, specifications, contracts, and curated exports concise.
 - SQLite is the searchable agent-memory layer for detailed findings,
   file/symbol indexes, references, commands, failures, and evidence-backed notes.
+
+Use structured memory and semantic retrieval for different jobs. SQLite or
+another structured store is for deterministic facts and graphs: paths, symbols,
+GUIDs, generated identifiers, asset links, reverse dependencies, commands,
+failures, and evidence-backed notes. Vector retrieval is a complementary
+semantic layer for conceptual search over curated notes, summaries,
+architecture docs, specifications, and selected chunks. Verify current source
+files before editing because any index can be stale.
 
 Do not blindly migrate all Markdown into SQLite. When Markdown memory becomes
 too large to read cheaply, introduce or rebuild the SQLite memory/index and keep
@@ -137,6 +155,26 @@ Keep generated semantic corpora, embedding caches, and vector indexes ignored
 when rebuildable. Commit only reviewable config, docs, schemas, evals, and
 scripts.
 
+Use `gi sql` / `gi sqlite` and `gi vector` only as diagnostic commands. They
+report counts, readiness, staleness, and recommendations for the project-memory
+retrieval layers; they do not deploy external services, install heavy
+dependencies, upload data, or index private sources by default.
+
+Use `gi tools rebuild` or `gi rag rebuild` for a full configured
+project-memory/RAG tooling rebuild after explicit confirmation. Node forms such
+as `gi tools rebuild sql`, `gi rag rebuild chunks`, `gi tools rebuild vector`,
+`gi rag rebuild manifest`, and `gi tools rebuild evals` rebuild or check only
+that node. Use only commands documented in `rag-system.json`, local runbooks, or
+helper scripts.
+
+Prefer machine-checkable retrieval evals that verify readable configured RAG
+files, generated-ignore rules, count consistency between enabled SQLite,
+semantic corpus, and vector layers, exact keyword retrieval for paths, commands,
+symbols, versions, and error text, semantic retrieval for conceptual guidance,
+hybrid retrieval through keyword or vector evidence, and expected source paths
+in top results. Do not make a model's free-form answer wording the primary eval
+target.
+
 ## Suggested Files
 
 - `pending-tasks.md`: active project-wide plans and multi-step work.
@@ -149,10 +187,34 @@ scripts.
   retrieval quality.
 - `build_chroma_index.py`: optional local Chroma adapter when semantic
   retrieval is enabled.
+- `architecture-migrations.md`: durable history of major architecture moves.
+- `specs/integration-contracts/connected-projects.md`: connected-projects
+  register when this project depends on or regularly interacts with external
+  repositories, cloned examples, sibling workspaces, service projects,
+  libraries, documentation sites, upstream tools, or dashboards.
 - `NOTES.md`: reviewable export of durable notes from local agent memory.
 - `architecture.md`: verified architecture notes.
 - `decisions.md`: durable decisions and rationale.
 - `known-issues.md`: recurring bugs, caveats, and workarounds.
+
+## Connected Projects
+
+If this project adds, researches, vendors, or regularly interacts with an
+external project, keep a connected-projects register, preferably:
+
+```text
+tools/project-memory/specs/integration-contracts/connected-projects.md
+```
+
+For each connected project, record its purpose, role in MultiSnap, approved
+local folder path when it is a workspace dependency, canonical URLs, service
+IDs or contract endpoints, owner/source of truth, update cadence, version or
+branch policy, exchanged data and generated artifacts, safe setup/sync/build
+commands, privacy and license boundaries, current status, caveats, and why the
+dependency still exists. Read the register before touching integrations or
+nested repositories. The register is not permission to inspect arbitrary
+external folders; project-local scope and explicit user requests still govern
+filesystem access.
 
 ## Task Planning
 

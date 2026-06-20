@@ -101,9 +101,13 @@ or:
   as requests to configure three ordered language sequences: project working
   environment, commit messages, and tasks.
 - If the unified project-language command does not include explicit languages,
-  ask in three numbered steps. For each step, show a concise numbered Markdown
-  checklist with the available languages and the current selection, then accept
-  the user's next answer as numbers or language names for that step.
+  ask in three numbered steps. For each step, show a concise numbered checklist
+  with the available languages and the current selection using plain inline
+  checkbox markers such as `[x] 1. English`, then accept the user's next answer
+  as numbers or language names for that step. Do not use Markdown task-list
+  syntax such as `- [x] 1. English` for chat selection prompts.
+- If a language surface has no current ordered selection, default it to
+  `English`, then `Russian`, while preserving any explicit existing selection.
 - If the user replies with only numbers, such as `1 2`, map them to the most
   recent checklist and preserve that order. Do not ask what those numbers mean
   after showing the checklist.
@@ -158,6 +162,13 @@ or:
   system UI counters are not agent progress updates.
 - Launch applications in the background so focus does not jump away from the
   user's current window.
+- Treat `gi reboot` and `gi restart` as requests to start or restart all
+  documented applications in the current project using project-local run
+  instructions. Identify the full app set before launch, use a preferred
+  full-app start/restart command when one exists, otherwise account for each
+  documented desktop app, web/API app, and worker separately. Verify each
+  documented startup signal after launch and do not report success from a PID
+  alone or from a web health check alone.
 - Treat a short first message as a possible chat title: restore context, then
   ask what to do next instead of executing the title as a task.
 - Treat short chat commands that start with `gi` as shared instruction-kit
@@ -173,6 +184,12 @@ or:
   semantic retrieval. Keep Chroma, Qdrant, pgvector, and similar stores behind a
   retrieval adapter contract, and keep generated semantic corpora, embedding
   caches, and vector indexes ignored when rebuildable.
+- Use structured memory and semantic retrieval for different jobs. Structured
+  stores hold deterministic facts and graphs such as paths, symbols, generated
+  identifiers, dependencies, commands, failures, and evidence-backed notes.
+  Vector retrieval is a complementary semantic layer over curated notes,
+  summaries, architecture docs, and selected chunks. Verify current source files
+  before editing because memory indexes can be stale.
 - Keep `gi` command responses scoped to the shared instruction-kit command. Do
   not resume an older product task after a `gi` command unless the user
   explicitly asks.
@@ -186,6 +203,18 @@ or:
   checking or applying instruction-kit file updates.
 - Treat `gi саммари` and `gi summary` as requests to write a handoff summary
   file under `tools/summary/`, not only as requests to summarize in chat.
+- Write `gi summary` handoffs thematically, not as short chronological retells.
+  Preserve user intent, important decisions, code or architecture changes,
+  business/product logic, verification evidence, blockers, and next useful
+  context. Omit routine successful command bookkeeping such as staging counts,
+  branch names, push targets, commit hashes, and git directives when git logs or
+  command history can recover them. If a thread protocol is needed, keep it in
+  a separate `Thread Timeline` section.
+- When the user asks where a previous thread stopped, reconcile handoff
+  summaries with the latest visible thread conclusion, screenshots, quotes, or
+  other user-provided evidence. Prefer the last explicit product/architecture
+  decision, open question, or agreed next direction over incidental caveats or
+  old next-step bullets.
 - Treat `gi гит-обзор` and `gi git summary` as requests to summarize the latest
   git commit in the current project in chat. Include commit metadata, changed
   files, compact stats, inferred purpose, and notable risks or checks. Do not
@@ -194,6 +223,22 @@ or:
   test commands and produce a compact verification plan for the current feature,
   bug fix, or release check. Plan first; run checks only when the user asks or
   when the current task already requires verification.
+- Treat `gi help`, `ги хелп`, `ги help`, `gi commands`, and `ги команды` as
+  read-only requests for the local GI command index. Prefer `COMMANDS.md` when
+  present, otherwise use project-local instructions. Do not run startup restore,
+  resume old work, call services or task managers, mutate files, or execute the
+  listed commands.
+- Treat `gi first test` and equivalent first-launch wording as requests to
+  reset only documented project-owned first-run state and verify the documented
+  first-launch workflow. If reset paths, keys, or commands are undocumented,
+  ask one concise clarification question instead of guessing.
+- Treat `gi rebuild` as a project/application rebuild only. Treat
+  `gi tools rebuild` and `gi rag rebuild` as GI/project-memory/RAG rebuilds,
+  with node forms for `sql`, `chunks`, `vector`, `manifest`, and `evals`. Full
+  GI/RAG rebuilds require explicit confirmation after listing source groups,
+  exclusions, generated paths, node commands, status checks, and dependencies.
+- Treat `gi sql`, `gi sqlite`, and `gi vector` as inspection-only diagnostics
+  for project-memory retrieval readiness.
 - For verification plans and smoke checks, confirm exact CLI flags, ports,
   routes, methods, JSON payload fields, health endpoints, and required
   environment variables from current local instructions, manifests, config, or
@@ -232,6 +277,11 @@ or:
   normal successful updates. Apply the update, then report a compact summary
   with versions, migration counts/IDs, changed files, checks, commit/push
   result, and blockers if any.
+- During `gi обновить`, inspect newly applied migrations for RAG-impacting
+  changes and compare them with `tools/project-memory/rag-system.json` rebuild
+  state. Report stale nodes and ask before a full rebuild, or run/offer the
+  smallest documented node rebuild for narrow migrations. Do not mark rebuild
+  state current until rebuild and readback/status checks succeed.
 - For web applications, assume the user will inspect the UI manually. Do not
   open, browse, screenshot, or visually inspect the UI automatically unless the
   user explicitly asks for that.
@@ -287,6 +337,12 @@ or:
   do not store, guess, or copy API endpoints from old notes or other projects.
 - If a configured manager id is missing from config-service, stop with a concise
   blocker instead of falling back to port scans or stale task-manager memory.
+- For web-facing services, require live config-service discovery before binding
+  ports. If a service record is missing and project-local self-registration is
+  `on`, self-register only through the documented config-service guide and
+  contract after choosing a local free port that is absent from current service
+  records and verifying local health. If self-registration is `off` or the
+  registration contract is missing, stop with a blocker.
 - Before posting plans or starting sprint work, verify the workflow-specific
   manager contract and capabilities, not only generic health.
 - Treat task managers as work queues and lifecycle recorders, not as the actors
@@ -301,6 +357,13 @@ or:
   API. Use only lifecycle identifiers returned by the manager, and report
   blockers when contract, auth, permissions, status updates, or readback are
   unavailable.
+- Treat `gi start sprint`, `gi sprint start`, and equivalent active-sprint
+  wording as more specific than plain `gi start`. Resolve the configured
+  manager through config-service, read the guide and contract, request the
+  active Sprint/Cycle or next task through documented operations, and complete
+  work through documented lifecycle states. Do not fall back to generic startup
+  restore, local task notes, raw intake, guessed endpoints, or filesystem task
+  edits.
 - Treat `gi add sprint`, `gi create sprint`, and equivalent wording as requests
   to create a visible executable Sprint/Cycle through the configured manager.
   Resolve the manager through config-service, use only documented create/read
@@ -323,6 +386,15 @@ or:
   types.
 
 ## Feature Workflow Contracts
+
+- Use Context7 or similar external documentation retrieval only when configured
+  or explicitly requested for current public library, framework, SDK, or API
+  documentation. It is not project memory, service discovery, task management,
+  or current local source truth. Prefer local instructions and service
+  guide/contract endpoints for project behavior. Do not send secrets, private
+  source, private business rules, user data, production data, telemetry, local
+  paths, or project-memory contents to external doc services unless explicit
+  private-source configuration exists and the user approves the exact scope.
 
 - For non-trivial features, keep durable project-local feature documents that
   include idea, functional description, workflow contract, implementation plan,

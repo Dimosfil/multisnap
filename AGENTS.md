@@ -40,6 +40,14 @@ retrieval adapter contract so prompts, `gi` startup, and memory writeback do not
 depend on one vector database. Keep generated semantic corpora, embedding
 caches, and vector indexes ignored when rebuildable.
 
+Structured memory and semantic retrieval serve different jobs. Structured
+stores such as SQLite hold deterministic facts and graphs: paths, symbols,
+GUIDs, generated identifiers, asset links, reverse dependencies, commands,
+failures, and evidence-backed notes. Vector retrieval is only a complementary
+semantic layer over curated notes, summaries, architecture docs, and selected
+chunks. Always verify the current source files before editing because any
+memory or retrieval index can be stale.
+
 The copied instruction kit is a token-economy and RAG-startup layer for this
 project. Use it to restore only the needed context from local instructions,
 handoff summaries, targeted searches, and project memory instead of reading the
@@ -56,6 +64,25 @@ notes, old refactoring phases, or local commits ahead of a remote only when
 relevant; do not offer to continue, run, finish, or push remembered work unless
 the user explicitly asks for that action.
 
+For `gi summary` / handoff summaries, write thematic thread state rather than a
+short chronological retelling. Preserve user intent, important decisions, code
+or architecture changes, business/product logic, verification evidence,
+blockers, and next useful context. Break complex threads into topic sections and
+brief thesis bullets, with links only when they help a future agent understand
+or verify the context. For architecture or research conversations, especially
+when the user evaluates an external project, article, pattern, or tool as a
+possible integration target, preserve the user's integration intent and map
+external concepts to current project components. Omit routine successful
+command bookkeeping such as staging counts, branch names, push targets, commit
+hashes, and git directives when git logs or command history can recover them.
+If detailed protocol is needed, keep it separate as `Thread Timeline`.
+
+When answering where a previous thread stopped, treat handoff summaries as
+evidence, not the sole authority. Reconcile them with the latest visible thread
+conclusion, screenshots, direct quotes, or other user-provided evidence. Prefer
+the last explicit architectural/product decision, open question, or agreed next
+direction over incidental caveats or old next-step bullets.
+
 ## Durable Memory
 
 Durable project knowledge lives in:
@@ -67,10 +94,22 @@ tools/project-memory/
 Important findings should be written there or in a handoff summary, not only
 left in chat.
 
+Treat `tools/project-memory/` as the durable, portable product specification
+layer. Record non-trivial feature algorithms, business logic, workflow
+contracts, data rules, architecture migration history, verification guarantees,
+and current implementation maps there so another agent can rebuild the same
+behavior on a different stack. Treat `tools/summary/` as compact chat handoff
+state, not as the canonical product specification.
+
 For analysis, refactoring, migration, or multi-step implementation tasks, create
 or update a concise checklist in `tools/project-memory/pending-tasks.md` or a
 dedicated task plan in `tools/project-memory/` before editing code. Keep plans
 task-relevant and update progress as meaningful steps complete.
+
+For non-trivial feature, business-rule, data-model, integration, or architecture
+work, update the relevant project-memory specification in the same scoped
+change. Keep specs split by meaning, such as feature specs, business-rule docs,
+data-model docs, integration contracts, and architecture migrations.
 
 When this project reveals a reusable improvement to agent instructions,
 workflows, templates, or checklists, write a dated recommendation to the shared
@@ -182,6 +221,14 @@ Get-Content .\*.log -Tail 120
   task manager. Use only documented active-task, next-task, start/progress,
   blocker, completion, and readback operations, and only lifecycle identifiers
   returned by the manager.
+- Treat `gi start sprint`, `gi sprint start`, and equivalent active-sprint
+  wording as more specific than plain `gi start`. Restore only the context
+  needed for task-manager work, resolve the configured manager through
+  config-service, read the guide and contract, request the active Sprint/Cycle
+  or next task through the documented operation, move work through documented
+  lifecycle states, and submit completion through the manager contract. Do not
+  fall back to generic startup restore, local task notes, raw intake, guessed
+  endpoints, or filesystem task edits.
 - Treat `gi add sprint`, `gi create sprint`, `gi добавить спринт`, and
   equivalent add-sprint wording as requests to create a visible executable
   Sprint/Cycle through the configured task manager. Resolve the manager through
@@ -208,15 +255,18 @@ Get-Content .\*.log -Tail 120
   lookup before the process binds or reserves any port. On every startup, read
   the configured config-service URL, verify the config service is reachable, and
   query the app's own `service_id` startup/service record to learn the port and
-  neighboring service endpoints. If config-service is missing, unreachable, has
-  no record for the app, or returns an incomplete port/startup config, report a
-  clear blocker and wait for config-service to be configured, repaired, or
-  started; do not guess ports, scan for free ports, reuse stale local config, or
-  bind a fallback port. If the record exists but the currently documented
-  endpoints changed, refresh the record only after the config-service check
-  succeeds. MultiSnap is a desktop app, so normal startup must not query or
-  publish to config-service unless local instructions explicitly add a
-  discoverable web/API runtime.
+  neighboring service endpoints. If the service record exists, bind only the
+  recorded port. If the service record is missing and the project-local
+  self-registration flag is `on`, read the config-service guide and contract,
+  list current records, choose a local free port that is absent from
+  config-service, bind it, verify local health, and create or update the record
+  only through the documented config-service operation. If self-registration is
+  `off`, config-service is unavailable, or registration is undocumented, stop
+  with a clear blocker. Do not invent registration payloads, write directly to
+  config-service storage, reuse stale local runtime config, guess ports, scan
+  blindly, or bind fallback ports. MultiSnap is a desktop app, so normal startup
+  must not query or publish to config-service unless local instructions
+  explicitly add a discoverable web/API runtime.
 - Treat `gi ftp`, `ги фтп`, `gi ftp push`, `ги фтп пуш`, `gi upload ftp`,
   `gi deploy ftp`, and `gi залей на фтп` as requests to upload the current
   project's configured build output to FTP, FTPS, or SFTP. Treat
@@ -239,9 +289,52 @@ Get-Content .\*.log -Tail 120
   commit hostnames, usernames, passwords, tokens, private keys, or private
   remote paths unless project policy explicitly marks them non-secret.
 - Treat `gi reboot`, `ги ребут`, `gi restart`, and `ги рестарт` as requests to
-  start or restart the current application using project-local run instructions.
-  If the app is running, restart it; if it is not running, start it. Launch in
-  the background so focus does not jump away from the user's current window.
+  start or restart all documented applications in the current project using
+  project-local run instructions. Before starting anything, identify the full
+  app set from local run instructions, manifests, service records, desktop
+  packaging metadata, or project memory. If local instructions define a
+  preferred command that launches the full app set, use it; otherwise restart
+  each running documented app and start each missing documented app in the
+  background so focus does not jump away. After launch, wait briefly and verify
+  each documented startup signal: expected processes, visible desktop windows
+  when applicable, web/API health or discovery endpoints when applicable,
+  worker readiness signals, and relevant startup or crash logs when documented.
+  The final report must account for each app by name or role with
+  started/restarted/skipped status and verification evidence. Do not report
+  reboot success from a PID alone, from a web health check alone, or while any
+  expected app is unlaunched or unverified.
+- Treat `gi first test`, `gi первый тест`, and `ги первый тест` as first-launch
+  verification requests. Read project-local run, cleanup, cache reset, and test
+  instructions before clearing anything. Reset only documented project-owned
+  app cache, generated state, temporary first-run profiles, and rebuildable
+  local app settings. Do not delete user documents, production data, secrets,
+  credentials, external service data, shared system caches, sibling projects,
+  or arbitrary user-home folders. If exact reset paths, keys, scripts, or
+  commands are missing, ask one concise clarification question instead of
+  guessing. After reset, start the app, run the documented first-launch checks,
+  and report what was cleared, what passed, and what was left untouched.
+- Treat `gi rebuild` and `ги ребилд` as requests to rebuild only the current
+  project/application output, such as an executable, package, or documented
+  artifact. Read project-local build or rebuild instructions, manifests,
+  scripts, and packaging metadata before running the documented command. Do not
+  treat it as dependency restore, tests-only verification, a RAG rebuild, or a
+  combined project-plus-RAG rebuild. If no project rebuild contract exists, ask
+  one short clarification question instead of inventing a command.
+- Treat `gi tools rebuild`, `gi rag rebuild`, `ги тулс ребилд`, and
+  `ги раг ребилд` as full GI/project-memory/RAG rebuild requests. Treat node
+  forms such as `gi tools rebuild sql`, `gi rag rebuild chunks`,
+  `gi tools rebuild vector`, `gi rag rebuild manifest`, and
+  `gi tools rebuild evals` as scoped node rebuilds. A full rebuild requires
+  explicit confirmation immediately before execution after listing source
+  groups, privacy exclusions, generated paths that may be replaced, node
+  commands, status checks, and required services. Use only documented
+  project-local commands from `tools/project-memory/rag-system.json`, runbooks,
+  or helper scripts. Do not commit generated SQLite databases, semantic
+  corpora, vector indexes, logs, secrets, telemetry, or private runtime data.
+- Treat `gi sql`, `gi sqlite`, and `gi vector` as diagnostic commands for
+  project-memory retrieval readiness. They report counts, readiness, staleness,
+  and recommendations; they do not deploy external services, install heavy
+  dependencies, upload data, or index private sources by default.
 - Treat `gi install`, `gi инсталл`, `ги инсталл`, and obvious typo variants
   such as `gi иснтлл` as requests to build the current project and produce an
   installer. Use Inno Setup by default when no installer tool is named. If the
@@ -303,11 +396,14 @@ Get-Content .\*.log -Tail 120
   selected language in each choice is primary for that surface.
 - If `gi язык` or an equivalent unified project-language command is sent
   without explicit languages, run a three-step chat flow instead of asking for
-  one free-form line. At each step, show the same numbered Markdown checklist of
-  available languages with the current selection checked, render choices as
-  task-list bullets such as `- [x] 1. English`, name the current surface, and
-  tell the user they may reply with numbers or language names. Do not use
-  ordered-task syntax such as `1. [x] English`.
+  one free-form line. At each step, show the same numbered checklist of
+  available languages with the current selection checked, render each option as
+  a plain inline checkbox marker on one physical line such as
+  `[x] 1. English`, name the current surface, and tell the user they may reply
+  with numbers or language names. Do not use Markdown task-list syntax such as
+  `- [x] 1. English` or ordered-task syntax such as `1. [x] English`. If a
+  language surface has no current ordered selection, default it to
+  `English`, then `Russian`, while preserving any explicit existing selection.
 - When the user replies to that flow with a numeric-only answer such as `1 2`,
   interpret the numbers against the most recent language checklist and apply the
   resulting ordered languages to the current step. Do not ask which languages the
@@ -376,6 +472,13 @@ Get-Content .\*.log -Tail 120
   analysis first. Explain the likely issue and ask what action the user wants
   before editing files, unless the user explicitly says to fix it, such as
   `fix`, `почини`, or `gi почини`.
+- Treat `gi help`, `ги хелп`, `ги help`, `gi commands`, and `ги команды` as
+  read-only requests for a compact local GI command index with short
+  descriptions. Prefer `COMMANDS.md` when present, otherwise use `AGENTS.md`,
+  the runbook, and working agreements. Do not run startup restore, resume old
+  work, call services or task managers, mutate files, execute listed commands,
+  or ask the user to choose a command unless they request help with a specific
+  command.
 - Treat `gi test plan`, `gi тест-план`, and equivalent verification-plan
   wording as requests to inspect current project-local test, smoke-check, API,
   UI, or CLI command contracts before recommending or running checks. Verify
@@ -417,6 +520,17 @@ Get-Content .\*.log -Tail 120
   rules. In this project, use `AGENTS.md`, `tools/AGENT_WORKING_AGREEMENTS.md`,
   `tools/AGENT_RUNBOOK.md`, `tools/agent-start.ps1`, and project memory as the
   local authoritative sources.
+- Use Context7 or similar external documentation retrieval only when configured
+  or explicitly requested for current public library, framework, SDK, or API
+  docs. Do not use it as project memory, service discovery, task management, or
+  current local source truth. Prefer project-local instructions and
+  guide/contract endpoints for project behavior, and prefer official OpenAI
+  documentation workflows for OpenAI product questions. Do not send secrets,
+  credentials, private source code, private business rules, user data,
+  production data, telemetry, local paths, or project-memory contents to
+  external doc services unless explicit private-source configuration exists and
+  the user approves the exact scope. Pin exact library IDs and versions when
+  known, and verify current local source before editing.
 - Treat shared-library files such as `COMMANDS.md` and `patterns/*.md` as
   upstream source material only when checking or applying accepted instruction
   kit updates; do not assume they exist locally in this project.
@@ -433,5 +547,12 @@ Get-Content .\*.log -Tail 120
   push pre-existing local commits, sync a feature branch, resume a remembered
   plan, or perform general Git maintenance. Commit or push only changes created
   by the update flow itself and only when the local update policy permits it.
+- During `gi обновить`, inspect newly applied migrations for RAG-impacting
+  changes. If they change RAG source rules, chunking, embedding metadata,
+  SQLite/vector schemas, retrieval adapters, or project-memory index scripts,
+  compare the migration IDs with `tools/project-memory/rag-system.json` rebuild
+  state. Report stale nodes and ask before a full rebuild, or run/offer the
+  smallest documented node rebuild for narrow migrations. Do not mark rebuild
+  state current until rebuild and readback/status checks succeed.
 - When local project rules conflict with shared instructions, the local
   `AGENTS.md`, runbook, and working agreements take precedence.
