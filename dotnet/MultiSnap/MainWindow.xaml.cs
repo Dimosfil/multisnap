@@ -13,6 +13,7 @@ namespace MultiSnap;
 
 public partial class MainWindow : Window
 {
+    private const double DefaultBrushSize = 3;
     private readonly ScreenCaptureService _capture;
     private readonly Action _startAreaCapture;
     private readonly Action _captureFullScreen;
@@ -27,8 +28,8 @@ public partial class MainWindow : Window
         _settings = settings;
         InitializeComponent();
         InkLayer.DefaultDrawingAttributes.Color = Colors.Red;
-        InkLayer.DefaultDrawingAttributes.Width = 3;
-        InkLayer.DefaultDrawingAttributes.Height = 3;
+        ApplyBrushSize(DefaultBrushSize);
+        BrushSizeSlider.ValueChanged += BrushSizeSlider_ValueChanged;
         ApplySettings(settings);
     }
 
@@ -105,6 +106,19 @@ public partial class MainWindow : Window
     private void ClearInk_Click(object sender, RoutedEventArgs e)
     {
         InkLayer.Strokes.Clear();
+    }
+
+    private void BrushSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        ApplyBrushSize(e.NewValue);
+    }
+
+    private void ApplyBrushSize(double value)
+    {
+        var brushSize = Math.Round(value);
+        InkLayer.DefaultDrawingAttributes.Width = brushSize;
+        InkLayer.DefaultDrawingAttributes.Height = brushSize;
+        BrushSizeValueText.Text = $"{brushSize:0} px";
     }
 
     private BitmapSource? ComposeImage()

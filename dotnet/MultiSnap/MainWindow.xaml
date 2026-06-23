@@ -68,6 +68,14 @@
                     <Button Content="Save PNG" Click="Save_Click" Style="{StaticResource EditorToolbarButtonStyle}" Foreground="{StaticResource TextPrimaryBrush}" />
                     <Border Width="1" Height="26" Background="{StaticResource StrokeBrush}" Margin="2,0,10,0" />
                     <Button Content="Clear Ink" Click="ClearInk_Click" Style="{StaticResource EditorToolbarButtonStyle}" Foreground="{StaticResource TextPrimaryBrush}" />
+                    <Border Width="1" Height="26" Background="{StaticResource StrokeBrush}" Margin="2,0,12,0" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Brush" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Slider x:Name="BrushSizeSlider" Width="128" Minimum="1" Maximum="18" Value="3"
+                                TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                        <TextBlock x:Name="BrushSizeValueText" Text="3 px" Foreground="{StaticResource TextPrimaryBrush}"
+                                   Width="42" Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

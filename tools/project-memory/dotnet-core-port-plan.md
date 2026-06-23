@@ -24,6 +24,10 @@ Goal: rebuild the same minimal MultiSnap workflow on a modern Windows desktop st
 - Added `%APPDATA%/MultiSnap/settings.json` and daily Serilog file logs under `%APPDATA%/MultiSnap/logs`.
 - Verified with `dotnet build dotnet\MultiSnap\MultiSnap.csproj`.
 
+2026-06-23:
+
+- Added an editor toolbar brush-size slider for ink annotations. New strokes use the selected thickness.
+
 Current first-slice limitations:
 
 - Annotation is first-pass ink only, not full Electron tool parity yet.

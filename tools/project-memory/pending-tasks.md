@@ -14,6 +14,16 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### Editor Brush Thickness Control
+
+Goal: let users change annotation brush thickness directly from the editor toolbar.
+
+Planned changes:
+
+- [x] Add a compact brush-size control to the editor toolbar.
+- [x] Bind brush size to new ink strokes.
+- [x] Verify the .NET build.
+
 ### Copy Annotation Alignment Fix
 
 Goal: keep editor ink/selection aligned with the screenshot when Copy or Save PNG exports the composed image.
