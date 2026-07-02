@@ -19,3 +19,4 @@ tools/project-memory/semantic-corpus*.jsonl
 tools/summary/*.tmp
 artifacts/dotnet-version-state.json
 artifacts/dotnet-version-pending.json
+tools/deploy/prod.local.json

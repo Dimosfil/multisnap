@@ -7,6 +7,11 @@
       "id": "local-instructions",
       "paths": [
         "AGENTS.md",
+        "COMMANDS.md",
+        "README.md",
+        "docs/*.md",
+        "patterns/*.md",
+        "patterns/AGENTS_RUNTIME/*.md",
         "tools/AGENT_RUNBOOK.md",
         "tools/AGENT_WORKING_AGREEMENTS.md"
       ],
@@ -137,13 +142,13 @@
     },
     "last_node_rebuilds": {
       "sql": {
-        "last_rebuild_at": "2026-06-20T15:03:50+00:00",
-        "last_rebuild_migration": "2026.06.19.3",
+        "last_rebuild_at": "2026-07-02T16:22:55+00:00",
+        "last_rebuild_migration": "2026.07.01.1",
         "status": "succeeded"
       },
       "chunks": {
-        "last_rebuild_at": "2026-06-20T15:03:50+00:00",
-        "last_rebuild_migration": "2026.06.19.3",
+        "last_rebuild_at": "2026-07-02T16:22:55+00:00",
+        "last_rebuild_migration": "2026.07.01.1",
         "status": "succeeded"
       }
     }

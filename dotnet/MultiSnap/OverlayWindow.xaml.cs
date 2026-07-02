@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using MultiSnap.Services;
@@ -12,6 +14,11 @@ namespace MultiSnap;
 
 public partial class OverlayWindow : Window
 {
+    private static readonly IntPtr HwndTopmost = new(-1);
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpShowWindow = 0x0040;
+
     private readonly BitmapSource _screenshot;
     private readonly ScreenCaptureService _capture;
     private readonly OverlayMode _mode;
@@ -43,7 +50,12 @@ public partial class OverlayWindow : Window
             ? "Select video recording area"
             : "Select capture area";
         Focusable = true;
-        Loaded += (_, _) => Focus();
+        SourceInitialized += (_, _) => BringOverlayToFront();
+        Loaded += (_, _) =>
+        {
+            Activate();
+            Focus();
+        };
     }
 
     public BitmapSource? CapturedImage { get; private set; }
@@ -152,6 +164,31 @@ public partial class OverlayWindow : Window
             Math.Abs(start.X - end.X),
             Math.Abs(start.Y - end.Y));
     }
+
+    private void BringOverlayToFront()
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpShowWindow);
+        SetForegroundWindow(handle);
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(
+        IntPtr hWnd,
+        IntPtr hWndInsertAfter,
+        int x,
+        int y,
+        int cx,
+        int cy,
+        uint uFlags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
 }
 
 public enum OverlayMode

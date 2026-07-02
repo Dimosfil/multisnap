@@ -1,4 +1,7 @@
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Ink;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
@@ -19,6 +22,8 @@ public partial class MainWindow : Window
     private readonly Action _captureFullScreen;
     private AppSettings _settings;
     private BitmapSource? _currentImage;
+    private readonly Stack<InkUndoAction> _inkUndoStack = new();
+    private bool _isApplyingInkUndo;
 
     public MainWindow(ScreenCaptureService capture, Action startAreaCapture, Action captureFullScreen, AppSettings settings)
     {
@@ -30,6 +35,9 @@ public partial class MainWindow : Window
         InkLayer.DefaultDrawingAttributes.Color = Colors.Red;
         ApplyBrushSize(DefaultBrushSize);
         BrushSizeSlider.ValueChanged += BrushSizeSlider_ValueChanged;
+        InkLayer.StrokeCollected += InkLayer_StrokeCollected;
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.Undo, Undo_Executed, Undo_CanExecute));
+        InputBindings.Add(new KeyBinding(ApplicationCommands.Undo, new KeyGesture(Key.Z, ModifierKeys.Control)));
         ApplySettings(settings);
     }
 
@@ -38,7 +46,9 @@ public partial class MainWindow : Window
         _currentImage = image;
         CaptureImage.Source = image;
         EmptyState.Visibility = Visibility.Collapsed;
+        _inkUndoStack.Clear();
         InkLayer.Strokes.Clear();
+        CommandManager.InvalidateRequerySuggested();
     }
 
     public void ApplySettings(AppSettings settings)
@@ -105,7 +115,14 @@ public partial class MainWindow : Window
 
     private void ClearInk_Click(object sender, RoutedEventArgs e)
     {
+        if (InkLayer.Strokes.Count == 0)
+        {
+            return;
+        }
+
+        _inkUndoStack.Push(InkUndoAction.RestoreStrokes(InkLayer.Strokes.Clone()));
         InkLayer.Strokes.Clear();
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void BrushSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -119,6 +136,59 @@ public partial class MainWindow : Window
         InkLayer.DefaultDrawingAttributes.Width = brushSize;
         InkLayer.DefaultDrawingAttributes.Height = brushSize;
         BrushSizeValueText.Text = $"{brushSize:0} px";
+    }
+
+    private void InkLayer_StrokeCollected(object sender, InkCanvasStrokeCollectedEventArgs e)
+    {
+        if (_isApplyingInkUndo)
+        {
+            return;
+        }
+
+        _inkUndoStack.Push(InkUndoAction.RemoveStroke(e.Stroke));
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void Undo_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+    {
+        e.CanExecute = _inkUndoStack.Count > 0;
+        e.Handled = true;
+    }
+
+    private void Undo_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
+        if (_inkUndoStack.Count == 0)
+        {
+            return;
+        }
+
+        var action = _inkUndoStack.Pop();
+        _isApplyingInkUndo = true;
+        try
+        {
+            switch (action.Kind)
+            {
+                case InkUndoActionKind.RemoveStroke:
+                    if (action.Stroke is not null && InkLayer.Strokes.Contains(action.Stroke))
+                    {
+                        InkLayer.Strokes.Remove(action.Stroke);
+                    }
+                    break;
+                case InkUndoActionKind.RestoreStrokes:
+                    if (action.Strokes is not null)
+                    {
+                        InkLayer.Strokes = action.Strokes.Clone();
+                    }
+                    break;
+            }
+        }
+        finally
+        {
+            _isApplyingInkUndo = false;
+        }
+
+        CommandManager.InvalidateRequerySuggested();
+        e.Handled = true;
     }
 
     private BitmapSource? ComposeImage()
@@ -142,7 +212,7 @@ public partial class MainWindow : Window
                 InkLayer.Strokes.Draw(inkContext);
             }
 
-            var imageBounds = GetDisplayedImageBounds(originalWidth, originalHeight);
+            var imageBounds = GetDisplayedImageBounds(_currentImage);
             var scaleX = originalWidth / Math.Max(1, imageBounds.Width);
             var scaleY = originalHeight / Math.Max(1, imageBounds.Height);
             var inkToImage = new Matrix(
@@ -166,22 +236,36 @@ public partial class MainWindow : Window
         return bitmap;
     }
 
-    private Rect GetDisplayedImageBounds(int imagePixelWidth, int imagePixelHeight)
+    private Rect GetDisplayedImageBounds(BitmapSource image)
     {
+        var imageTopLeft = CaptureImage.TranslatePoint(new System.Windows.Point(0, 0), InkLayer);
         var controlWidth = Math.Max(1, CaptureImage.ActualWidth);
         var controlHeight = Math.Max(1, CaptureImage.ActualHeight);
-        var imageAspect = imagePixelWidth / Math.Max(1.0, imagePixelHeight);
+        var imageAspect = image.Width / Math.Max(1.0, image.Height);
         var controlAspect = controlWidth / controlHeight;
 
         if (controlAspect > imageAspect)
         {
             var displayedHeight = controlHeight;
             var displayedWidth = displayedHeight * imageAspect;
-            return new Rect((controlWidth - displayedWidth) / 2, 0, displayedWidth, displayedHeight);
+            return new Rect(imageTopLeft.X + (controlWidth - displayedWidth) / 2, imageTopLeft.Y, displayedWidth, displayedHeight);
         }
 
         var width = controlWidth;
         var height = width / imageAspect;
-        return new Rect(0, (controlHeight - height) / 2, width, height);
+        return new Rect(imageTopLeft.X, imageTopLeft.Y + (controlHeight - height) / 2, width, height);
+    }
+
+    private enum InkUndoActionKind
+    {
+        RemoveStroke,
+        RestoreStrokes
+    }
+
+    private sealed record InkUndoAction(InkUndoActionKind Kind, Stroke? Stroke, StrokeCollection? Strokes)
+    {
+        public static InkUndoAction RemoveStroke(Stroke stroke) => new(InkUndoActionKind.RemoveStroke, stroke, null);
+
+        public static InkUndoAction RestoreStrokes(StrokeCollection strokes) => new(InkUndoActionKind.RestoreStrokes, null, strokes);
     }
 }

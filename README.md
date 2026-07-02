@@ -1,28 +1,68 @@
 # MultiSnap
 
-MultiSnap is a Windows-first screenshot utility inspired by the fast capture and annotation workflow of tools like Monosnap.
+## Обзор
 
-## MVP goals
+MultiSnap - Windows-first утилита для быстрых скриншотов, разметки и записи
+выбранной области экрана. Приложение ориентировано на Monosnap-style workflow:
+быстро вызвать захват горячей клавишей или из tray, выделить область, отметить
+важное в легком редакторе и сразу скопировать или сохранить результат.
 
-- Capture full screen or selected area.
-- Open captures in a lightweight editor.
-- Add simple annotations.
-- Copy to clipboard or save as PNG.
-- Keep a local screenshot history.
+## Возможности
 
-## Development
+- Захват выбранной области через overlay.
+- Захват всего виртуального рабочего стола.
+- Легкая разметка снимка через WPF `InkCanvas`.
+- Копирование снимков в буфер обмена и сохранение PNG.
+- Запись выбранной области экрана через `ScreenRecorderLib`.
+- Tray menu для захвата области, полного экрана, записи видео, настроек и выхода.
+- Настройки горячих клавиш, запуска в tray и копирования снимков в clipboard.
+
+## Рабочие сценарии
+
+- `Ctrl+PrintScreen`: выбрать область и открыть снимок в редакторе.
+- `Ctrl+Shift+PrintScreen`: выбрать область и начать запись видео.
+- Кнопка `Full Screen`: захватить весь виртуальный рабочий стол.
+- Tray left-click: запустить захват области.
+- В редакторе: нарисовать пометки, затем `Copy`, `Save PNG` или `Clear Ink`.
+
+## Разработка
+
+Основной runtime - .NET 8 Windows desktop app:
 
 ```powershell
 dotnet run --project .\dotnet\MultiSnap\MultiSnap.csproj
 ```
 
-Build the WPF app:
+Сборка WPF-приложения:
 
 ```powershell
 dotnet build .\dotnet\MultiSnap\MultiSnap.csproj -p:Platform=x64
 ```
 
-Default shortcuts while the app is running:
+Публикация:
 
-- `PrintScreen` - capture a selected area.
-- `Ctrl+Shift+PrintScreen` - start video recording.
+```powershell
+dotnet publish .\dotnet\MultiSnap\MultiSnap.csproj -c Release -r win-x64 --self-contained false
+```
+
+Инсталлятор собирается через Inno Setup:
+
+```powershell
+.\tools\build-installer.ps1
+```
+
+Каноническая инвентаризация стека находится в
+`tools/project-memory/specs/technology-stack.md`.
+
+## English
+
+MultiSnap is a Windows-first screenshot, annotation, and selected-area screen
+recording utility inspired by fast Monosnap-style workflows. It lets the user
+capture an area or the full virtual desktop, mark up the image in a lightweight
+WPF editor, copy or save the PNG, and record a selected screen region from the
+tray or global hotkeys.
+
+The main runtime is a .NET 8 WPF desktop app with WinForms tray integration,
+global hotkeys, `ScreenRecorderLib` video recording, Serilog file logging, and
+Inno Setup packaging. The stack inventory is kept at
+`tools/project-memory/specs/technology-stack.md`.

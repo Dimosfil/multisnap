@@ -28,6 +28,14 @@ Use it for verified findings that should survive chat resets:
 
 Do not store secrets or credentials here.
 
+Do not store raw work results, generated product outputs, screenshots, photos,
+crawled or downloaded files, large logs, model outputs, build artifacts, export
+bundles, or run datasets under `tools/project-memory/`. Store raw artifacts in
+a project-local artifact, evidence, output, data, or docs-asset location chosen
+by the project, usually ignored when rebuildable or private. In project memory,
+keep only the minimal manifest, summary, checksum, or path/URL reference needed
+to explain a decision, contract, failure, or verification result.
+
 ## Reusable Experience For GI
 
 When this project reveals a reusable workflow, failure pattern, token-saving

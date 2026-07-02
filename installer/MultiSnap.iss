@@ -1,5 +1,5 @@
 #define MyAppName "MultiSnap"
-#define MyAppVersion "0.1.16"
+#define MyAppVersion "0.1.23"
 #define MyAppPublisher "MultiSnap"
 #define MyAppExeName "MultiSnap.exe"
 #define MyPublishDir "..\dotnet\MultiSnap\bin\Release\net8.0-windows\win-x64\publish"
@@ -38,4 +38,4 @@ Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: shellexec nowait postinstall skipifsilent

@@ -14,6 +14,57 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### GI Instruction Kit Update 2026.07.01.1
+
+Goal: apply accepted shared instruction-kit migrations through `2026.07.01.1`.
+
+Execution order:
+
+- [x] Apply pending migration content from the configured shared source cache.
+- [x] Record applied migration metadata after verification.
+- [x] Run instruction-kit update checks and `git diff --check`.
+- [!] Report changed files, stale RAG nodes if any, and git blocker/status.
+
+### Installer Postinstall Launch Elevation Fix
+
+Goal: prevent the installer from showing `CreateProcess failed; code 740` when launching MultiSnap after setup.
+
+Planned changes:
+
+- [x] Keep the app manifest elevated for elevated/system-window capture support.
+- [x] Change the Inno Setup postinstall launch to use ShellExecute so Windows can request UAC.
+- [x] Verify the .NET build and installer artifact: `artifacts/installer/MultiSnap-Setup-0.1.23.exe`.
+
+### Build 0.1.22 Installer
+
+Goal: produce the Windows installer for the current MultiSnap 0.1.22 build.
+
+Execution order:
+
+- [x] Confirm project-local version and installer script.
+- [x] Run the installer build script.
+- [x] Verify the generated setup artifact: `artifacts/installer/MultiSnap-Setup-0.1.22.exe`.
+
+### Elevated System Window Capture Fix
+
+Goal: keep screenshot hotkeys and area-selection overlay working when focus is on Windows system or elevated windows such as Task Manager and Settings.
+
+Planned changes:
+
+- [x] Add a Windows app manifest that runs MultiSnap elevated.
+- [x] Make the selection overlay assert foreground topmost status when it opens.
+- [x] Verify the .NET build.
+
+### Build 0.1.19 Installer
+
+Goal: produce the Windows installer for the current MultiSnap 0.1.19 build.
+
+Execution order:
+
+- [x] Confirm project-local version and installer script.
+- [x] Run the installer build script.
+- [x] Verify the generated setup artifact: `artifacts/installer/MultiSnap-Setup-0.1.19.exe`.
+
 ### Editor Brush Thickness Control
 
 Goal: let users change annotation brush thickness directly from the editor toolbar.
@@ -23,6 +74,17 @@ Planned changes:
 - [x] Add a compact brush-size control to the editor toolbar.
 - [x] Bind brush size to new ink strokes.
 - [x] Verify the .NET build.
+
+### Copy Annotation Alignment Regression
+
+Goal: fix remaining copied/saved annotation offset by using the actual WPF image position relative to the ink layer.
+
+Planned changes:
+
+- [x] Re-check editor image and ink coordinate origins.
+- [x] Export ink using the `Image` visual position relative to `InkCanvas`.
+- [x] Verify the .NET build.
+- [x] Produce updated installer artifact: `artifacts/installer/MultiSnap-Setup-0.1.18.exe`.
 
 ### Copy Annotation Alignment Fix
 
@@ -483,3 +545,41 @@ Verification:
 - [x] JSON validation for `tools/project-memory/rag-system.json` and `tools/project-memory/instruction-kit.json`
 - [x] PowerShell syntax validation for updated scripts
 - [x] Project-memory SQL and semantic chunk node rebuilds
+
+### GI Instruction Kit Update 2026.06.24.5
+
+Goal: apply accepted general-instructions migrations from `2026.06.21.1` through `2026.06.24.5` without changing unrelated product code.
+
+Planned changes:
+
+- [x] Install routed GI command docs and `patterns/AGENTS_RUNTIME/` modules.
+- [x] Update local command loading, project-memory artifact, production-local config, and RAG source guidance.
+- [x] Record applied migration metadata after verification.
+- [x] Run scoped verification checks and handle commit/push according to local GI update policy.
+
+Risks or dependencies:
+
+- [!] Preserve MultiSnap-specific desktop-app and project-boundary instructions.
+- [!] Generated SQLite databases and semantic corpus exports must remain ignored.
+- [!] Autocommit/push is blocked while unrelated worktree changes are present.
+
+Verification:
+
+- [x] `.\tools\check-instruction-kit-updates.ps1`
+- [x] JSON validation for `tools/project-memory/instruction-kit.json`, `tools/project-memory/rag-system.json`, and `tools/project-memory/retrieval-evals.json`
+- [x] `git diff --check`
+- [x] Project-memory SQL and semantic chunk node rebuilds
+
+### Editor Undo Shortcut
+
+Goal: make `Ctrl+Z` undo the most recent editor ink action.
+
+Planned changes:
+
+- [x] Add undo history for collected ink strokes.
+- [x] Make clearing ink undoable.
+- [x] Bind `Ctrl+Z` to the editor undo command.
+
+Verification:
+
+- [x] `dotnet build .\dotnet\MultiSnap\MultiSnap.csproj -p:Platform=x64`

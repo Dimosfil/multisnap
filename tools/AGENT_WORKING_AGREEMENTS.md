@@ -33,6 +33,10 @@
 - Do not revert user changes unless explicitly requested.
 - Treat dirty worktrees as normal.
 - If user changes affect the task, work with them.
+- Classify each meaningful batch before editing as refactor, development,
+  verification, operation, migration, configuration cleanup, or a named mix. Do
+  not hide behavior changes, public-contract changes, service operations, or
+  data migrations inside a "refactor" label.
 
 ## Git
 
@@ -57,6 +61,13 @@
 - Branch naming: `TODO`.
 - Generated files policy: `TODO`.
 - Never commit secrets, credentials, local databases, logs, or caches.
+- Treat API keys, access tokens, service-account keys, webhook secrets, signing
+  secrets, and similar credentials as secret boundaries. Keep them out of source
+  code, committed config, client bundles, public frontend environment variables,
+  logs, traces, generated artifacts, chat responses, and project memory. Prefer
+  per-person or per-service credentials, separate dev/staging/prod secrets,
+  managed production secret stores, scoped permissions, usage monitoring,
+  rotation, and network restrictions where supported.
 - Follow `tools/project-memory/git-preferences.json` for commit-message
   languages. English is primary; selected additional languages are included when
   the user explicitly asks the agent to commit.
@@ -174,6 +185,9 @@ or:
 - Treat short chat commands that start with `gi` as shared instruction-kit
   commands for the copied `general-instructions` kit in this project. `gi` is
   the only short prefix; do not rename it to `GAI` or another alias.
+  Before acting on any state-changing `gi` / `ги` command, read `COMMANDS.md`
+  when present and the routed `patterns/AGENTS_RUNTIME/` module for that
+  command. If the routed module is missing, stop and report the missing path.
   If a `gi` command is missing a needed parameter, ask one short clarification
   question instead of guessing.
 - Use the instruction kit as a token-economy and RAG-startup layer: restore only
@@ -364,6 +378,14 @@ or:
   work through documented lifecycle states. Do not fall back to generic startup
   restore, local task notes, raw intake, guessed endpoints, or filesystem task
   edits.
+- Treat `gi local sprint`, `gi sprint local`, and equivalent explicitly local
+  sprint wording as requests to run a local sprint checklist without a
+  configured task manager or config-service. Use sprint content from the current
+  message, current chat context, or a project-local planning file named by local
+  instructions. If no sprint content is available, ask one short question for
+  the local sprint goal and task list. Do not create raw manager intake, edit
+  task-manager internals, resolve config-service, or claim that a visible
+  Sprint/Cycle was created, started, completed, or synchronized.
 - Treat `gi add sprint`, `gi create sprint`, and equivalent wording as requests
   to create a visible executable Sprint/Cycle through the configured manager.
   Resolve the manager through config-service, use only documented create/read
@@ -425,6 +447,12 @@ or:
 - Avoid embedding machine-specific absolute paths in committed source,
   instructions, or examples; validate configured absolute paths at startup or
   I/O boundaries.
+- Use `patterns/SENIOR_AGENT_ENGINEERING_STANDARD.md` as the compact execution
+  checklist for code-writing work: load relevant local context, preserve
+  intended behavior, keep architecture and configuration boundaries clear, work
+  in coherent verified batches, update durable project memory when behavior or
+  architecture changes, and escalate high-risk actions through documented
+  approval paths.
 
 ## Verification
 

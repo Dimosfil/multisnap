@@ -7,6 +7,63 @@ inspired by fast Monosnap-style workflows. The primary runtime surface is a
 .NET 8 Windows desktop app with a WPF UI, WinForms tray integration, global
 hotkeys, and Windows screen capture services.
 
+## Loading Contract
+
+- Start with this file.
+- Read only the modules needed for the current request.
+- If the request contains a GI chat command such as `gi ...`, `ги ...`, or a
+  known mojibake form, treat it as a concrete task even when the message is
+  short. First read `COMMANDS.md` when present, then read every runtime module
+  routed to that command before acting.
+- For state-changing GI commands that start, stop, restart, rebuild, deploy,
+  test, install, reset, update, commit, push, or manage task-manager state, do
+  not execute from memory, old chat examples, or a command name alone. If the
+  command's routed module is unavailable, stop and report the missing path.
+- For `gi restart`, `gi reboot`, `ги рестарт`, `ги ребут`, and equivalent
+  aliases, `patterns/AGENTS_RUNTIME/09-project-operation-commands.md` is
+  mandatory context before any process inspection, stop, start, or success
+  report.
+- Keep behavior compatible with the previous monolithic `AGENTS.md`; the
+  runtime modules change retrieval shape, not accepted safety, scope, command,
+  verification, or git rules.
+
+## Runtime Module Routing
+
+- Purpose, RAG startup, project memory, handoff summaries, and shared-rule
+  propagation: `patterns/AGENTS_RUNTIME/01-purpose.md`
+- Repository map: `patterns/AGENTS_RUNTIME/02-repository-map.md`
+- Rule precedence and scope arbitration:
+  `patterns/AGENTS_RUNTIME/03-rule-precedence.md`
+- Authoring reusable rules, configuration boundaries, code quality,
+  project info/stack inventory, and batch verification:
+  `patterns/AGENTS_RUNTIME/04-content-and-authoring.md`
+- Windows shell and networking policy:
+  `patterns/AGENTS_RUNTIME/05-windows-command-policy.md`
+- Token economy, verification command lookup, `gi info`, `gi stack`,
+  `gi refactor`, feature contracts, and large-output handling:
+  `patterns/AGENTS_RUNTIME/06-tool-usage-and-token-economy.md`
+- Startup, restore, project goal, bug evidence, repository cleanup,
+  filesystem boundaries, and first-message handling:
+  `patterns/AGENTS_RUNTIME/07-startup-and-scope.md`
+- Config-service, service guide/contract lookup, task manager commands,
+  manager-backed and local sprint commands, and web-service port registration:
+  `patterns/AGENTS_RUNTIME/08-config-service-and-task-manager.md`
+- Dev/prod publication, FTP deploy, restart/reboot, first test, full test,
+  default reset, installer packaging, SQL/vector inspection, and project/RAG
+  rebuild commands: `patterns/AGENTS_RUNTIME/09-project-operation-commands.md`
+- Nested repositories, private local app data, product-plan intent signals,
+  and missing required entities:
+  `patterns/AGENTS_RUNTIME/10-private-scope-and-missing-context.md`
+- Project, commit, task, and response language preferences:
+  `patterns/AGENTS_RUNTIME/11-language-preferences.md`
+- UI focus and frontend verification:
+  `patterns/AGENTS_RUNTIME/12-ui-and-focus.md`
+- Progress-update style: `patterns/AGENTS_RUNTIME/13-progress-updates.md`
+- Update intake and `updates/` handling:
+  `patterns/AGENTS_RUNTIME/14-update-intake.md`
+- Verification policy: `patterns/AGENTS_RUNTIME/15-verification.md`
+- Git policy: `patterns/AGENTS_RUNTIME/16-git-policy.md`
+
 ## Restore Context
 
 If the user only sends a short greeting, thanks, acknowledgement, or
@@ -105,6 +162,11 @@ For analysis, refactoring, migration, or multi-step implementation tasks, create
 or update a concise checklist in `tools/project-memory/pending-tasks.md` or a
 dedicated task plan in `tools/project-memory/` before editing code. Keep plans
 task-relevant and update progress as meaningful steps complete.
+
+Classify each meaningful batch before editing as refactor, development,
+verification, operation, migration, configuration cleanup, or a named mix. Do
+not hide behavior changes, public-contract changes, service operations, or data
+migrations inside a "refactor" label.
 
 For non-trivial feature, business-rule, data-model, integration, or architecture
 work, update the relevant project-memory specification in the same scoped
@@ -229,6 +291,14 @@ Get-Content .\*.log -Tail 120
   lifecycle states, and submit completion through the manager contract. Do not
   fall back to generic startup restore, local task notes, raw intake, guessed
   endpoints, or filesystem task edits.
+- Treat `gi local sprint`, `gi sprint local`, and equivalent explicitly local
+  sprint wording as requests to run a local sprint checklist without a
+  configured task manager or config-service. Use sprint content from the current
+  message, current chat context, or a project-local planning file named by local
+  instructions. If no sprint content is available, ask one short question for
+  the local sprint goal and task list. Do not create raw manager intake, edit
+  task-manager internals, resolve config-service, or claim that a visible
+  Sprint/Cycle was created, started, completed, or synchronized.
 - Treat `gi add sprint`, `gi create sprint`, `gi добавить спринт`, and
   equivalent add-sprint wording as requests to create a visible executable
   Sprint/Cycle through the configured task manager. Resolve the manager through
@@ -409,6 +479,13 @@ Get-Content .\*.log -Tail 120
   resulting ordered languages to the current step. Do not ask which languages the
   numbers mean when the checklist was just shown.
 - Do not commit secrets, credentials, local databases, logs, or generated caches.
+- Treat API keys, access tokens, service-account keys, webhook secrets, signing
+  secrets, and similar credentials as secret boundaries. Keep them out of source
+  code, committed config, client bundles, public frontend environment variables,
+  logs, traces, generated artifacts, chat responses, and project memory. Prefer
+  per-person or per-service credentials, separate dev/staging/prod secrets,
+  managed production secret stores, scoped permissions, usage monitoring,
+  rotation, and network restrictions where supported.
 - Do not print full `git diff` output by default. Prefer `git diff --stat` and
   targeted queries for relevant files or patterns.
 - Preserve text encodings when editing files. On Windows, do not rewrite source
@@ -531,9 +608,16 @@ Get-Content .\*.log -Tail 120
   external doc services unless explicit private-source configuration exists and
   the user approves the exact scope. Pin exact library IDs and versions when
   known, and verify current local source before editing.
-- Treat shared-library files such as `COMMANDS.md` and `patterns/*.md` as
-  upstream source material only when checking or applying accepted instruction
-  kit updates; do not assume they exist locally in this project.
+- Treat copied shared-library files such as `COMMANDS.md` and `patterns/*.md`
+  as local instruction-kit runtime material after they are installed. During
+  accepted instruction-kit updates, compare them with the configured upstream
+  source and preserve project-local rules that are stricter or more specific.
+- Use `patterns/SENIOR_AGENT_ENGINEERING_STANDARD.md` as the compact execution
+  checklist for code-writing work: load relevant local context, preserve
+  intended behavior, keep architecture and configuration boundaries clear, work
+  in coherent verified batches, update durable project memory when behavior or
+  architecture changes, and escalate high-risk actions through documented
+  approval paths.
 - Treat `init <source>`, `инит <source>`, `инициализируй <source>`, and
   `инит правила <source>` as shared-instruction bootstrap/startup requests when
   `<source>` points to the canonical shared-instruction Git repository, the
@@ -556,3 +640,5 @@ Get-Content .\*.log -Tail 120
   state current until rebuild and readback/status checks succeed.
 - When local project rules conflict with shared instructions, the local
   `AGENTS.md`, runbook, and working agreements take precedence.
+
+## Imported Claude Cowork project instructions
