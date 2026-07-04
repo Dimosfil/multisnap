@@ -19,9 +19,10 @@ hotkeys, and Windows screen capture services.
   test, install, reset, update, commit, push, or manage task-manager state, do
   not execute from memory, old chat examples, or a command name alone. If the
   command's routed module is unavailable, stop and report the missing path.
-- For `gi restart`, `gi reboot`, `ги рестарт`, `ги ребут`, and equivalent
-  aliases, `patterns/AGENTS_RUNTIME/09-project-operation-commands.md` is
-  mandatory context before any process inspection, stop, start, or success
+- For `gi restart`, `gi reboot`, `gi docker`, `ги рестарт`, `ги ребут`,
+  `ги докер`, and equivalent aliases,
+  `patterns/AGENTS_RUNTIME/09-project-operation-commands.md` is mandatory
+  context before any process inspection, Docker build, stop, start, or success
   report.
 - Keep behavior compatible with the previous monolithic `AGENTS.md`; the
   runtime modules change retrieval shape, not accepted safety, scope, command,
@@ -246,6 +247,11 @@ Get-Content .\*.log -Tail 120
   or arbitrary external folder unless the user gives an explicit concrete path
   and action. Use APIs, connectors, or task-manager endpoints for cross-project
   communication.
+- Before filesystem writes, verify the active project root and target identity
+  from local instructions, README, manifests, git remote, service id, or project
+  memory. If the task appears to target a different product, repository, or
+  absolute path outside this root, stop and warn the user unless the current
+  message explicitly authorizes that exact external path and action.
 - Treat `gi config`, `gi конфиг`, `ги конфиг`, `gi config service`,
   `ги конфиг сервис`, `ги конфиг сервис url=<url>`, and
   `ги конфиг сервис урл=<url>` as requests to get or set the bootstrap config
@@ -358,6 +364,14 @@ Get-Content .\*.log -Tail 120
   Prefer `tools/deploy/ftp.local.example.json` only as a redacted shape. Do not
   commit hostnames, usernames, passwords, tokens, private keys, or private
   remote paths unless project policy explicitly marks them non-secret.
+- For FTP/FTPS upload stalls, hangs, repeated timeouts, or failed stream opens,
+  inspect project-local FTP config, selected service contracts, and current
+  user-provided details for an authorized SSH-based SFTP route to the same
+  remote folder. If SSH host, port, user, remote folder, and credential
+  reference are available, switch to SFTP over SSH before more FTP/FTPS upload
+  variants and report that fallback. If required SFTP details are missing,
+  report the exact missing fields or ask one short question. Do not disable FTPS
+  certificate validation as a routine fallback unless explicitly authorized.
 - Treat `gi reboot`, `ги ребут`, `gi restart`, and `ги рестарт` as requests to
   start or restart all documented applications in the current project using
   project-local run instructions. Before starting anything, identify the full
@@ -373,6 +387,19 @@ Get-Content .\*.log -Tail 120
   started/restarted/skipped status and verification evidence. Do not report
   reboot success from a PID alone, from a web health check alone, or while any
   expected app is unlaunched or unverified.
+- Treat `gi docker`, `ги докер`, and equivalent Docker restart wording as a
+  request to restart the current project's documented Docker or Docker Compose
+  runtime. Read project-local Docker/run instructions, compose files, Dockerfile
+  or Containerfile, scripts, manifests, service records, and health-check
+  contracts before touching containers. If no Docker/Compose config or
+  documented Docker run contract exists, report that Docker is not configured
+  for the project and stop. If Docker CLI, Docker Compose, or Docker engine is
+  unavailable, report the blocker. Rebuild before restart when the image is
+  missing, build inputs changed, the local contract requires rebuild, or image
+  freshness cannot be proven. Scope operations to the current project only; do
+  not prune Docker state, remove volumes/images, or stop unrelated containers.
+  Verify container status, health checks, mapped URLs, and relevant recent logs
+  before reporting status.
 - Treat `gi first test`, `gi первый тест`, and `ги первый тест` as first-launch
   verification requests. Read project-local run, cleanup, cache reset, and test
   instructions before clearing anything. Reset only documented project-owned

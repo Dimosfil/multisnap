@@ -1,5 +1,5 @@
 ﻿{
-    "instruction_kit_version":  "2026.07.01.1",
+    "instruction_kit_version":  "2026.07.04.1",
     "source":  "https://github.com/Dimosfil/general-instructions.git",
     "installed_at":  "2026-05-21T07:23:55.9766359+03:00",
     "update_check":  {
@@ -137,9 +137,12 @@
                                "2026.06.24.6__add_local_sprint_command",
                                "2026.06.30.1__add_senior_agent_engineering_standard",
                                "2026.06.30.2__add_api_key_secret_safety",
-                               "2026.07.01.1__classify_development_vs_refactor"
+                               "2026.07.01.1__classify_development_vs_refactor",
+                               "2026.07.02.1__require_project_identity_before_writes",
+                               "2026.07.03.1__add_gi_docker_command",
+                               "2026.07.04.1__prefer_sftp_fallback_for_ftp_upload_failures"
                            ],
-    "last_update_check_at":  "2026-07-02T19:22:11+03:00",
+    "last_update_check_at":  "2026-07-04T16:26:52+03:00",
     "copied_files":  [
                          "COMMANDS.md",
                          "AGENTS.md",
@@ -201,6 +204,7 @@
                          "patterns/PROJECT_TESTING_STRATEGY.md",
                          "patterns/FIRST_MESSAGE_HANDLING.md",
                          "patterns/RAG_STARTUP_FLOW.md",
-                         "patterns/SERVICE_DISCOVERY_CONFIG.md"
+                         "patterns/SERVICE_DISCOVERY_CONFIG.md",
+                         "patterns/PROJECT_FTP_DEPLOY.md"
                      ]
 }

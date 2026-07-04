@@ -14,6 +14,17 @@ generated outputs, secrets, credentials, or private production data.
 
 ## Tasks
 
+### GI Instruction Kit Update 2026.07.04.1
+
+Goal: apply accepted shared instruction-kit migrations through `2026.07.04.1`.
+
+Execution order:
+
+- [x] Apply pending migration content from the configured shared source cache.
+- [x] Record applied migration metadata after verification.
+- [x] Run instruction-kit update checks and `git diff --check`.
+- [~] Report changed files, RAG rebuild status, and commit/push result.
+
 ### GI Instruction Kit Update 2026.07.01.1
 
 Goal: apply accepted shared instruction-kit migrations through `2026.07.01.1`.
